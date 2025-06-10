@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Share, Play } from 'lucide-react';
 
@@ -44,6 +45,20 @@ const YouTubeShorts: React.FC = () => {
 
     fetchVideos();
   }, []);
+
+  // Auto-play do primeiro vídeo quando os vídeos são carregados
+  useEffect(() => {
+    if (videos.length > 0 && !loading) {
+      setPlayingVideo(0);
+    }
+  }, [videos, loading]);
+
+  // Auto-play quando muda de vídeo
+  useEffect(() => {
+    if (videos.length > 0) {
+      setPlayingVideo(currentVideoIndex);
+    }
+  }, [currentVideoIndex, videos.length]);
 
   const handleLike = (e: React.MouseEvent, videoId: number) => {
     e.stopPropagation();
@@ -93,7 +108,6 @@ const YouTubeShorts: React.FC = () => {
     
     if (newIndex !== currentVideoIndex && newIndex < videos.length) {
       setCurrentVideoIndex(newIndex);
-      setPlayingVideo(null);
       setShowComments(null);
     }
   };
@@ -125,7 +139,7 @@ const YouTubeShorts: React.FC = () => {
           key={video.id}
           className="relative h-full w-full snap-start flex-shrink-0"
         >
-          {/* Video Player or Thumbnail */}
+          {/* Video Player */}
           <div className="absolute inset-0">
             {playingVideo === index ? (
               <iframe
