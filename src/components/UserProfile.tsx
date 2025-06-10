@@ -1,167 +1,155 @@
 
 import React, { useState } from 'react';
-import { User, Wine, MapPin, Calendar, Heart, Star, Settings, LogOut } from 'lucide-react';
+import { User, MapPin, Calendar, LogOut, Package, Percent, Lock, FileText, Phone, Mail, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import Login from './Login';
+import OrdersList from './OrdersList';
+import VouchersList from './VouchersList';
+import ChangePassword from './ChangePassword';
+
+type ViewType = 'profile' | 'orders' | 'canceledOrders' | 'vouchers' | 'security';
 
 const UserProfile: React.FC = () => {
-  const [user] = useState({
-    name: 'Maria Silva',
-    email: 'maria@email.com',
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-    joinDate: '2023-03-15',
-    location: 'São Paulo, SP',
-    favoriteWines: 15,
-    reviews: 8,
-    badges: ['Degustador Iniciante', 'Amante de Tintos', 'Explorer Local'],
-    recentActivity: [
-      { type: 'review', wine: 'Cabernet Sauvignon 2020', rating: 4.5, date: '2024-01-15' },
-      { type: 'visit', winery: 'Vinícola Vale dos Vinhedos', date: '2024-01-10' },
-      { type: 'favorite', wine: 'Malbec Reserva 2019', date: '2024-01-08' }
-    ]
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [jwt, setJwt] = useState('');
+  const [currentView, setCurrentView] = useState<ViewType>('profile');
 
-  const handleEditProfile = () => {
-    console.log('Editar perfil');
+  const handleLoginSuccess = (userData: any, token: string) => {
+    setUser(userData);
+    setJwt(token);
+    setIsLoggedIn(true);
+    console.log('Login successful:', userData);
   };
 
   const handleLogout = () => {
-    console.log('Logout');
+    setUser(null);
+    setJwt('');
+    setIsLoggedIn(false);
+    setCurrentView('profile');
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  if (!isLoggedIn) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  if (currentView === 'orders') {
+    return <OrdersList jwt={jwt} type="active" onBack={() => setCurrentView('profile')} />;
+  }
+
+  if (currentView === 'canceledOrders') {
+    return <OrdersList jwt={jwt} type="canceled" onBack={() => setCurrentView('profile')} />;
+  }
+
+  if (currentView === 'vouchers') {
+    return <VouchersList jwt={jwt} onBack={() => setCurrentView('profile')} />;
+  }
+
+  if (currentView === 'security') {
+    return <ChangePassword jwt={jwt} onBack={() => setCurrentView('profile')} />;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-red-50 to-white pb-20">
-      {/* Header com gradiente */}
-      <div className="profile-gradient p-6 text-white">
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Header do perfil */}
+      <div className="bg-gray-800 text-white p-6">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">Meu Perfil</h1>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-            <Settings className="w-5 h-5" />
+          <h1 className="text-xl font-semibold">Meu perfil</h1>
+          <Button
+            variant="ghost"
+            className="text-blue-400 hover:bg-gray-700"
+            onClick={() => console.log('Editar perfil')}
+          >
+            Editar dados
           </Button>
         </div>
         
         <div className="flex items-center space-x-4">
-          <Avatar className="w-20 h-20 border-4 border-white/30">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback className="bg-white/20 text-white text-xl">MS</AvatarFallback>
+          <Avatar className="w-20 h-20">
+            <AvatarImage src={user?.avatar || ''} alt={user?.username || 'User'} />
+            <AvatarFallback className="bg-gray-600 text-white text-xl">
+              {user?.username ? getInitials(user.username) : 'DI'}
+            </AvatarFallback>
           </Avatar>
           
           <div className="flex-1">
-            <h2 className="text-xl font-semibold">{user.name}</h2>
-            <p className="text-red-100 flex items-center mt-1">
-              <MapPin className="w-4 h-4 mr-1" />
-              {user.location}
-            </p>
-            <p className="text-red-100 flex items-center mt-1">
-              <Calendar className="w-4 h-4 mr-1" />
-              Membro desde {new Date(user.joinDate).toLocaleDateString('pt-BR')}
-            </p>
+            <h2 className="text-xl font-semibold">{user?.username || 'Diego'}</h2>
+            <div className="flex items-center mt-2 text-gray-300">
+              <Phone className="w-4 h-4 mr-2" />
+              <span className="text-sm">55 (51) 99130-4597</span>
+            </div>
+            <div className="flex items-center mt-1 text-gray-300">
+              <Mail className="w-4 h-4 mr-2" />
+              <span className="text-sm">{user?.email || 'mazuhimdiego@gmail.com'}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="p-4 space-y-4 -mt-4">
-        {/* Estatísticas */}
-        <Card className="shadow-lg">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-3 gap-4 text-center">
+      <div className="p-4 space-y-4">
+        {/* Cards de opções */}
+        <div className="grid grid-cols-1 gap-4">
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => console.log('Informações pessoais')}>
+            <CardContent className="flex items-center p-4">
+              <FileText className="w-6 h-6 text-gray-600 mr-4" />
               <div>
-                <div className="text-2xl font-bold text-burgundy-700">{user.favoriteWines}</div>
-                <div className="text-sm text-gray-600 flex items-center justify-center">
-                  <Heart className="w-4 h-4 mr-1" />
-                  Favoritos
-                </div>
+                <h3 className="font-semibold">Informações pessoais</h3>
+                <p className="text-sm text-gray-600">Visualize ou edite seus dados cadastrados</p>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setCurrentView('security')}>
+            <CardContent className="flex items-center p-4">
+              <Lock className="w-6 h-6 text-gray-600 mr-4" />
               <div>
-                <div className="text-2xl font-bold text-burgundy-700">{user.reviews}</div>
-                <div className="text-sm text-gray-600 flex items-center justify-center">
-                  <Star className="w-4 h-4 mr-1" />
-                  Avaliações
-                </div>
+                <h3 className="font-semibold">Segurança</h3>
+                <p className="text-sm text-gray-600">Atualize a senha da sua conta</p>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setCurrentView('orders')}>
+            <CardContent className="flex items-center p-4">
+              <Package className="w-6 h-6 text-gray-600 mr-4" />
               <div>
-                <div className="text-2xl font-bold text-burgundy-700">{user.badges.length}</div>
-                <div className="text-sm text-gray-600 flex items-center justify-center">
-                  <Wine className="w-4 h-4 mr-1" />
-                  Conquistas
-                </div>
+                <h3 className="font-semibold">Meus pedidos</h3>
+                <p className="text-sm text-gray-600">Encontre todos os seus pedidos realizados</p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Badges/Conquistas */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg text-burgundy-800">Suas Conquistas</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="flex flex-wrap gap-2">
-              {user.badges.map((badge, index) => (
-                <Badge key={index} variant="secondary" className="bg-burgundy-100 text-burgundy-800">
-                  {badge}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Atividade Recente */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg text-burgundy-800">Atividade Recente</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 space-y-3">
-            {user.recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                {activity.type === 'review' && <Star className="w-5 h-5 text-yellow-500" />}
-                {activity.type === 'visit' && <MapPin className="w-5 h-5 text-green-500" />}
-                {activity.type === 'favorite' && <Heart className="w-5 h-5 text-red-500" />}
-                
-                <div className="flex-1">
-                  {activity.type === 'review' && (
-                    <p className="text-sm">
-                      Avaliou <span className="font-semibold">{activity.wine}</span> com {activity.rating} estrelas
-                    </p>
-                  )}
-                  {activity.type === 'visit' && (
-                    <p className="text-sm">
-                      Visitou <span className="font-semibold">{activity.winery}</span>
-                    </p>
-                  )}
-                  {activity.type === 'favorite' && (
-                    <p className="text-sm">
-                      Adicionou <span className="font-semibold">{activity.wine}</span> aos favoritos
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-500">{new Date(activity.date).toLocaleDateString('pt-BR')}</p>
-                </div>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setCurrentView('vouchers')}>
+            <CardContent className="flex items-center p-4">
+              <Percent className="w-6 h-6 text-gray-600 mr-4" />
+              <div>
+                <h3 className="font-semibold">Meus cupons</h3>
+                <p className="text-sm text-gray-600">Visualize todos os seus cupons disponíveis</p>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Ações */}
-        <div className="space-y-3">
-          <Button 
-            onClick={handleEditProfile}
-            className="w-full bg-gradient-to-r from-burgundy-600 to-burgundy-700 hover:from-burgundy-700 hover:to-burgundy-800"
-          >
-            <User className="w-4 h-4 mr-2" />
-            Editar Perfil
-          </Button>
-          
-          <Button 
-            onClick={handleLogout}
-            variant="outline"
-            className="w-full border-red-300 text-red-600 hover:bg-red-50"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sair da Conta
-          </Button>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Botão de logout */}
+        <Button
+          onClick={handleLogout}
+          variant="outline"
+          className="w-full border-red-300 text-red-600 hover:bg-red-50 mt-6"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Sair da Conta
+        </Button>
       </div>
     </div>
   );
