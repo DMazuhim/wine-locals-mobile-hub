@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Share } from 'lucide-react';
+import { Heart, MessageCircle, Share, Play } from 'lucide-react';
 
 interface VideoData {
   id: number;
@@ -24,6 +24,7 @@ const YouTubeShorts: React.FC = () => {
   const [videos, setVideos] = useState<VideoData[]>([]);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [playingVideo, setPlayingVideo] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -58,6 +59,10 @@ const YouTubeShorts: React.FC = () => {
     console.log('Share video');
   };
 
+  const handlePlayVideo = (videoId: string, index: number) => {
+    setPlayingVideo(index);
+  };
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
     const scrollTop = container.scrollTop;
@@ -66,6 +71,7 @@ const YouTubeShorts: React.FC = () => {
     
     if (newIndex !== currentVideoIndex && newIndex < videos.length) {
       setCurrentVideoIndex(newIndex);
+      setPlayingVideo(null); // Reset playing video when scrolling
     }
   };
 
@@ -96,20 +102,43 @@ const YouTubeShorts: React.FC = () => {
           key={video.id}
           className="relative h-full w-full snap-start flex-shrink-0"
         >
-          {/* Video Player */}
+          {/* Video Player or Thumbnail */}
           <div className="absolute inset-0">
-            <iframe
-              src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&mute=0&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=${video.videoId}`}
-              className="w-full h-full"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title={video.title}
-            />
+            {playingVideo === index ? (
+              <iframe
+                src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0&showinfo=0`}
+                className="w-full h-full"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title={video.title}
+              />
+            ) : (
+              <div 
+                className="relative w-full h-full cursor-pointer"
+                onClick={() => handlePlayVideo(video.videoId, index)}
+              >
+                <img
+                  src={`https://i.ytimg.com/vi/${video.videoId}/maxresdefault.jpg`}
+                  alt={video.title}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  onError={(e) => {
+                    // Fallback to smaller thumbnail if maxres doesn't exist
+                    e.currentTarget.src = `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`;
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-black bg-opacity-60 rounded-full p-4">
+                    <Play className="w-12 h-12 text-white" fill="white" />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Side Actions */}
-          <div className="absolute right-4 bottom-20 flex flex-col space-y-6 z-10">
+          <div className="absolute right-4 bottom-32 flex flex-col space-y-6 z-10">
             <button 
               onClick={handleLike}
               className="flex flex-col items-center space-y-1"
@@ -142,7 +171,7 @@ const YouTubeShorts: React.FC = () => {
           </div>
 
           {/* Bottom Info - Positioned above footer */}
-          <div className="absolute bottom-28 left-4 right-20 z-10">
+          <div className="absolute bottom-24 left-4 right-20 z-10">
             <div className="text-white">
               <h3 className="font-semibold text-lg mb-2 line-clamp-2">
                 {video.title}

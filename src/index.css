@@ -84,6 +84,7 @@
 .mobile-app {
   height: 100vh;
   overflow: hidden;
+  position: relative;
 }
 
 .webview-container {
@@ -97,7 +98,7 @@
   border: none;
 }
 
-/* Tab navigation styles */
+/* Tab navigation styles - ALWAYS FIXED */
 .tab-navigation {
   position: fixed;
   bottom: 0;
@@ -105,7 +106,8 @@
   right: 0;
   height: 80px;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  z-index: 9999;
+  backdrop-filter: blur(10px);
 }
 
 .tab-button {
