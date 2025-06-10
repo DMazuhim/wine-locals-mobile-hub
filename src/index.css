@@ -121,13 +121,48 @@
   color: #fbbf24;
 }
 
-/* YouTube shorts container */
+/* YouTube shorts container - TikTok style */
 .youtube-container {
   height: calc(100vh - 80px);
-  background: linear-gradient(180deg, #fef2f2 0%, #ffffff 100%);
+  background: #000;
+  overflow: hidden;
+}
+
+/* Hide scrollbar but keep functionality */
+.youtube-container::-webkit-scrollbar {
+  display: none;
+}
+
+.youtube-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth scrolling for video transitions */
+.snap-y {
+  scroll-snap-type: y mandatory;
+}
+
+.snap-start {
+  scroll-snap-align: start;
 }
 
 /* Profile styles */
 .profile-gradient {
   background: linear-gradient(135deg, #7c2d12 0%, #991b1b 50%, #b91c1c 100%);
+}
+
+/* Text line clamp utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
