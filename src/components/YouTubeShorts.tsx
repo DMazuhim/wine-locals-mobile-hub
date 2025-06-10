@@ -44,13 +44,6 @@ const YouTubeShorts: React.FC = () => {
     fetchVideos();
   }, []);
 
-  // Auto-play the current video
-  useEffect(() => {
-    if (videos.length > 0 && !loading) {
-      setPlayingVideo(currentVideoIndex);
-    }
-  }, [currentVideoIndex, videos.length, loading]);
-
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log('Video liked!');
@@ -78,6 +71,7 @@ const YouTubeShorts: React.FC = () => {
     
     if (newIndex !== currentVideoIndex && newIndex < videos.length) {
       setCurrentVideoIndex(newIndex);
+      setPlayingVideo(null); // Reset playing video when scrolling
     }
   };
 
@@ -108,16 +102,39 @@ const YouTubeShorts: React.FC = () => {
           key={video.id}
           className="relative h-full w-full snap-start flex-shrink-0"
         >
-          {/* Video Player */}
+          {/* Video Player or Thumbnail */}
           <div className="absolute inset-0">
-            <iframe
-              src={`https://www.youtube.com/embed/${video.videoId}?autoplay=${playingVideo === index ? 1 : 0}&mute=0&controls=1&modestbranding=1&rel=0&showinfo=0`}
-              className="w-full h-full"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title={video.title}
-            />
+            {playingVideo === index ? (
+              <iframe
+                src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0&showinfo=0`}
+                className="w-full h-full"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title={video.title}
+              />
+            ) : (
+              <div 
+                className="relative w-full h-full cursor-pointer"
+                onClick={() => handlePlayVideo(video.videoId, index)}
+              >
+                <img
+                  src={`https://i.ytimg.com/vi/${video.videoId}/maxresdefault.jpg`}
+                  alt={video.title}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  onError={(e) => {
+                    // Fallback to smaller thumbnail if maxres doesn't exist
+                    e.currentTarget.src = `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`;
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-black bg-opacity-60 rounded-full p-4">
+                    <Play className="w-12 h-12 text-white" fill="white" />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Side Actions */}
