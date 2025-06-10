@@ -25,6 +25,8 @@ const YouTubeShorts: React.FC = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [playingVideo, setPlayingVideo] = useState<number | null>(null);
+  const [likedVideos, setLikedVideos] = useState<Set<number>>(new Set());
+  const [showComments, setShowComments] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -44,19 +46,41 @@ const YouTubeShorts: React.FC = () => {
     fetchVideos();
   }, []);
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = (e: React.MouseEvent, videoId: number) => {
     e.stopPropagation();
-    console.log('Video liked!');
+    setLikedVideos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(videoId)) {
+        newSet.delete(videoId);
+      } else {
+        newSet.add(videoId);
+      }
+      return newSet;
+    });
+    console.log('Video liked/unliked!', videoId);
   };
 
-  const handleComment = (e: React.MouseEvent) => {
+  const handleComment = (e: React.MouseEvent, videoId: number) => {
     e.stopPropagation();
-    console.log('Show comments');
+    setShowComments(showComments === videoId ? null : videoId);
+    console.log('Show comments for video:', videoId);
   };
 
-  const handleShare = (e: React.MouseEvent) => {
+  const handleShare = (e: React.MouseEvent, video: VideoData) => {
     e.stopPropagation();
-    console.log('Share video');
+    const shareUrl = `${window.location.origin}?video=${video.videoId}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: video.title,
+        text: video.description,
+        url: shareUrl,
+      });
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      console.log('Link copiado:', shareUrl);
+      // Aqui você pode adicionar um toast para informar que o link foi copiado
+    }
   };
 
   const handlePlayVideo = (videoId: string, index: number) => {
@@ -71,7 +95,8 @@ const YouTubeShorts: React.FC = () => {
     
     if (newIndex !== currentVideoIndex && newIndex < videos.length) {
       setCurrentVideoIndex(newIndex);
-      setPlayingVideo(null); // Reset playing video when scrolling
+      setPlayingVideo(null);
+      setShowComments(null);
     }
   };
 
@@ -124,7 +149,6 @@ const YouTubeShorts: React.FC = () => {
                   className="w-full h-full object-cover"
                   loading="lazy"
                   onError={(e) => {
-                    // Fallback to smaller thumbnail if maxres doesn't exist
                     e.currentTarget.src = `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`;
                   }}
                 />
@@ -140,27 +164,29 @@ const YouTubeShorts: React.FC = () => {
           {/* Right Side Actions */}
           <div className="absolute right-4 bottom-32 flex flex-col space-y-6 z-10">
             <button 
-              onClick={handleLike}
+              onClick={(e) => handleLike(e, video.id)}
               className="flex flex-col items-center space-y-1"
             >
               <div className="bg-gray-800 bg-opacity-80 rounded-full p-3">
-                <Heart className="w-6 h-6 text-white" />
+                <Heart 
+                  className={`w-6 h-6 ${likedVideos.has(video.id) ? 'text-red-500 fill-red-500' : 'text-white'}`}
+                />
               </div>
               <span className="text-white text-xs font-medium">12.3K</span>
             </button>
 
             <button 
-              onClick={handleComment}
+              onClick={(e) => handleComment(e, video.id)}
               className="flex flex-col items-center space-y-1"
             >
-              <div className="bg-gray-800 bg-opacity-80 rounded-full p-3">
+              <div className={`bg-gray-800 bg-opacity-80 rounded-full p-3 ${showComments === video.id ? 'bg-blue-600' : ''}`}>
                 <MessageCircle className="w-6 h-6 text-white" />
               </div>
               <span className="text-white text-xs font-medium">236</span>
             </button>
 
             <button 
-              onClick={handleShare}
+              onClick={(e) => handleShare(e, video)}
               className="flex flex-col items-center space-y-1"
             >
               <div className="bg-gray-800 bg-opacity-80 rounded-full p-3">
@@ -169,6 +195,43 @@ const YouTubeShorts: React.FC = () => {
               <span className="text-white text-xs font-medium">Share</span>
             </button>
           </div>
+
+          {/* Comments Section */}
+          {showComments === video.id && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gray-900 bg-opacity-95 p-4 z-20 max-h-64 overflow-y-auto">
+              <div className="text-white">
+                <h4 className="font-semibold mb-3">Comentários</h4>
+                <div className="space-y-3">
+                  <div className="flex space-x-2">
+                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold">U1</span>
+                    </div>
+                    <div>
+                      <p className="text-sm"><span className="font-semibold">@usuario1</span> Ótimo vídeo! 🍷</p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold">U2</span>
+                    </div>
+                    <div>
+                      <p className="text-sm"><span className="font-semibold">@usuario2</span> Adorei as dicas!</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 flex space-x-2">
+                  <input 
+                    type="text" 
+                    placeholder="Adicione um comentário..."
+                    className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg text-sm"
+                  />
+                  <button className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">
+                    Enviar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Bottom Info - Positioned above footer */}
           <div className="absolute bottom-24 left-4 right-20 z-10">
