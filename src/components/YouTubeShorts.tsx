@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Share, Play, Pause } from 'lucide-react';
+import { Heart, MessageCircle, Share } from 'lucide-react';
 
 interface VideoData {
   id: number;
@@ -23,7 +23,6 @@ interface ApiResponse {
 const YouTubeShorts: React.FC = () => {
   const [videos, setVideos] = useState<VideoData[]>([]);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,11 +42,6 @@ const YouTubeShorts: React.FC = () => {
 
     fetchVideos();
   }, []);
-
-  const handleVideoClick = (videoId: string) => {
-    // Abre o vídeo em uma nova aba do YouTube
-    window.open(`https://youtube.com/watch?v=${videoId}`, '_blank');
-  };
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -72,7 +66,6 @@ const YouTubeShorts: React.FC = () => {
     
     if (newIndex !== currentVideoIndex && newIndex < videos.length) {
       setCurrentVideoIndex(newIndex);
-      setIsPlaying(false);
     }
   };
 
@@ -101,41 +94,22 @@ const YouTubeShorts: React.FC = () => {
       {videos.map((video, index) => (
         <div 
           key={video.id}
-          className="relative h-full w-full snap-start flex-shrink-0 cursor-pointer"
-          onClick={() => handleVideoClick(video.videoId)}
+          className="relative h-full w-full snap-start flex-shrink-0"
         >
-          {/* Video Thumbnail */}
+          {/* Video Player */}
           <div className="absolute inset-0">
-            {video.thumbUrl ? (
-              <img
-                src={video.thumbUrl}
-                alt={video.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-900 flex items-center justify-center">
-                <img
-                  src={`https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`}
-                  alt={video.title}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback para thumbnail de qualidade menor se a maxres não existir
-                    e.currentTarget.src = `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
-                  }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Play Button Overlay */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-            <div className="bg-black bg-opacity-50 rounded-full p-4 hover:bg-opacity-70 transition-all">
-              <Play className="w-12 h-12 text-white fill-white" />
-            </div>
+            <iframe
+              src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&mute=0&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=${video.videoId}`}
+              className="w-full h-full"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title={video.title}
+            />
           </div>
 
           {/* Right Side Actions */}
-          <div className="absolute right-4 bottom-32 flex flex-col space-y-6">
+          <div className="absolute right-4 bottom-20 flex flex-col space-y-6 z-10">
             <button 
               onClick={handleLike}
               className="flex flex-col items-center space-y-1"
@@ -167,14 +141,14 @@ const YouTubeShorts: React.FC = () => {
             </button>
           </div>
 
-          {/* Bottom Info - Adjusted to avoid footer overlap */}
-          <div className="absolute bottom-24 left-4 right-20">
+          {/* Bottom Info - Positioned above footer */}
+          <div className="absolute bottom-28 left-4 right-20 z-10">
             <div className="text-white">
               <h3 className="font-semibold text-lg mb-2 line-clamp-2">
                 {video.title}
               </h3>
               {video.description && (
-                <p className="text-sm opacity-90 line-clamp-3 mb-3">
+                <p className="text-sm opacity-90 line-clamp-2 mb-3">
                   {video.description}
                 </p>
               )}
@@ -188,7 +162,7 @@ const YouTubeShorts: React.FC = () => {
           </div>
 
           {/* Video Progress Indicator */}
-          <div className="absolute top-4 left-4 right-4">
+          <div className="absolute top-4 left-4 right-4 z-10">
             <div className="flex space-x-1">
               {videos.map((_, i) => (
                 <div 
