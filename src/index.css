@@ -104,7 +104,6 @@
   left: 0;
   right: 0;
   height: 80px;
-  background: linear-gradient(135deg, #7c2d12 0%, #991b1b 50%, #7c2d12 100%);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
   z-index: 1000;
 }
@@ -115,10 +114,6 @@
 
 .tab-button:hover {
   transform: translateY(-2px);
-}
-
-.tab-button.active {
-  color: #fbbf24;
 }
 
 /* YouTube shorts container - TikTok style */
@@ -149,7 +144,7 @@
 
 /* Profile styles */
 .profile-gradient {
-  background: linear-gradient(135deg, #7c2d12 0%, #991b1b 50%, #b91c1c 100%);
+  background: linear-gradient(135deg, #722f37 0%, #8b1538 50%, #a21caf 100%);
 }
 
 /* Text line clamp utilities */

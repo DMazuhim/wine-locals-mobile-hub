@@ -107,7 +107,7 @@ const YouTubeShorts: React.FC = () => {
           <div className="absolute inset-0">
             {video.videoId ? (
               <iframe
-                src={`https://www.youtube.com/embed/${video.videoId}?autoplay=${isPlaying && index === currentVideoIndex ? 1 : 0}&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0`}
+                src={`https://www.youtube.com/embed/${video.videoId}?autoplay=${isPlaying && index === currentVideoIndex ? 1 : 0}&mute=0&controls=0&modestbranding=1&rel=0&showinfo=0`}
                 className="w-full h-full object-cover"
                 allow="autoplay; encrypted-media"
                 allowFullScreen
@@ -129,7 +129,7 @@ const YouTubeShorts: React.FC = () => {
           )}
 
           {/* Right Side Actions */}
-          <div className="absolute right-4 bottom-24 flex flex-col space-y-6">
+          <div className="absolute right-4 bottom-32 flex flex-col space-y-6">
             <button 
               onClick={handleLike}
               className="flex flex-col items-center space-y-1"
@@ -161,8 +161,8 @@ const YouTubeShorts: React.FC = () => {
             </button>
           </div>
 
-          {/* Bottom Info */}
-          <div className="absolute bottom-4 left-4 right-20">
+          {/* Bottom Info - Adjusted to avoid footer overlap */}
+          <div className="absolute bottom-24 left-4 right-20">
             <div className="text-white">
               <h3 className="font-semibold text-lg mb-2 line-clamp-2">
                 {video.title}
@@ -173,7 +173,7 @@ const YouTubeShorts: React.FC = () => {
                 </p>
               )}
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-burgundy-600 to-red-600 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-wine-600 to-wine-700 rounded-full flex items-center justify-center">
                   <span className="text-xs font-bold">WL</span>
                 </div>
                 <span className="text-sm font-medium">@winelocals</span>
