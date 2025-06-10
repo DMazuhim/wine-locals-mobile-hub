@@ -44,8 +44,9 @@ const YouTubeShorts: React.FC = () => {
     fetchVideos();
   }, []);
 
-  const handleVideoClick = () => {
-    setIsPlaying(!isPlaying);
+  const handleVideoClick = (videoId: string) => {
+    // Abre o vídeo em uma nova aba do YouTube
+    window.open(`https://youtube.com/watch?v=${videoId}`, '_blank');
   };
 
   const handleLike = (e: React.MouseEvent) => {
@@ -100,33 +101,38 @@ const YouTubeShorts: React.FC = () => {
       {videos.map((video, index) => (
         <div 
           key={video.id}
-          className="relative h-full w-full snap-start flex-shrink-0"
-          onClick={handleVideoClick}
+          className="relative h-full w-full snap-start flex-shrink-0 cursor-pointer"
+          onClick={() => handleVideoClick(video.videoId)}
         >
-          {/* Video Container */}
+          {/* Video Thumbnail */}
           <div className="absolute inset-0">
-            {video.videoId ? (
-              <iframe
-                src={`https://www.youtube.com/embed/${video.videoId}?autoplay=${isPlaying && index === currentVideoIndex ? 1 : 0}&mute=0&controls=0&modestbranding=1&rel=0&showinfo=0`}
+            {video.thumbUrl ? (
+              <img
+                src={video.thumbUrl}
+                alt={video.title}
                 className="w-full h-full object-cover"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
               />
             ) : (
               <div className="w-full h-full bg-gray-900 flex items-center justify-center">
-                <Play className="w-16 h-16 text-white opacity-50" />
+                <img
+                  src={`https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`}
+                  alt={video.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback para thumbnail de qualidade menor se a maxres não existir
+                    e.currentTarget.src = `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
+                  }}
+                />
               </div>
             )}
           </div>
 
-          {/* Play/Pause Button Overlay */}
-          {(!isPlaying || index !== currentVideoIndex) && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-              <div className="bg-black bg-opacity-50 rounded-full p-4">
-                <Play className="w-12 h-12 text-white fill-white" />
-              </div>
+          {/* Play Button Overlay */}
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+            <div className="bg-black bg-opacity-50 rounded-full p-4 hover:bg-opacity-70 transition-all">
+              <Play className="w-12 h-12 text-white fill-white" />
             </div>
-          )}
+          </div>
 
           {/* Right Side Actions */}
           <div className="absolute right-4 bottom-32 flex flex-col space-y-6">
@@ -173,7 +179,7 @@ const YouTubeShorts: React.FC = () => {
                 </p>
               )}
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-wine-600 to-wine-700 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-purple-500 rounded-full flex items-center justify-center">
                   <span className="text-xs font-bold">WL</span>
                 </div>
                 <span className="text-sm font-medium">@winelocals</span>

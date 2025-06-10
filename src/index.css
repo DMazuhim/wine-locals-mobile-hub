@@ -16,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
 
-    --primary: 14 100% 57%;
+    --primary: 271 100% 71%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 0 0% 96.1%;
@@ -33,7 +33,7 @@
 
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 14 100% 57%;
+    --ring: 271 100% 71%;
 
     --radius: 0.5rem;
   }
@@ -48,7 +48,7 @@
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 14 100% 57%;
+    --primary: 271 100% 71%;
     --primary-foreground: 0 0% 9%;
 
     --secondary: 0 0% 14.9%;
@@ -65,7 +65,7 @@
 
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 14 100% 57%;
+    --ring: 271 100% 71%;
   }
 }
 
@@ -144,7 +144,7 @@
 
 /* Profile styles */
 .profile-gradient {
-  background: linear-gradient(135deg, #722f37 0%, #8b1538 50%, #a21caf 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 50%, #7c3aed 100%);
 }
 
 /* Text line clamp utilities */
