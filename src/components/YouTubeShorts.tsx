@@ -4,18 +4,16 @@ import { Heart, MessageCircle, Share, Play, Pause } from 'lucide-react';
 
 interface VideoData {
   id: number;
-  attributes: {
-    title: string;
-    description: string;
-    videoId: string;
-    thumbnail: {
-      data: {
-        attributes: {
-          url: string;
-        };
-      };
-    };
-  };
+  title: string;
+  description: string;
+  videoId: string;
+  thumbUrl: string;
+  type: string;
+  provider: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  locale: string;
 }
 
 interface ApiResponse {
@@ -31,8 +29,10 @@ const YouTubeShorts: React.FC = () => {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
+        console.log('Fetching videos from API...');
         const response = await fetch('https://api.homolog.guiawinelocals.com/api/videos?publicationState=preview&pagination[pageSize]=100');
         const data: ApiResponse = await response.json();
+        console.log('API Response:', data);
         setVideos(data.data);
         setLoading(false);
       } catch (error) {
@@ -50,19 +50,16 @@ const YouTubeShorts: React.FC = () => {
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Implementar lógica de like
     console.log('Video liked!');
   };
 
   const handleComment = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Implementar lógica de comentários
     console.log('Show comments');
   };
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Implementar lógica de compartilhamento
     console.log('Share video');
   };
 
@@ -108,9 +105,9 @@ const YouTubeShorts: React.FC = () => {
         >
           {/* Video Container */}
           <div className="absolute inset-0">
-            {video.attributes.videoId ? (
+            {video.videoId ? (
               <iframe
-                src={`https://www.youtube.com/embed/${video.attributes.videoId}?autoplay=${isPlaying && index === currentVideoIndex ? 1 : 0}&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0`}
+                src={`https://www.youtube.com/embed/${video.videoId}?autoplay=${isPlaying && index === currentVideoIndex ? 1 : 0}&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0`}
                 className="w-full h-full object-cover"
                 allow="autoplay; encrypted-media"
                 allowFullScreen
@@ -168,11 +165,11 @@ const YouTubeShorts: React.FC = () => {
           <div className="absolute bottom-4 left-4 right-20">
             <div className="text-white">
               <h3 className="font-semibold text-lg mb-2 line-clamp-2">
-                {video.attributes.title}
+                {video.title}
               </h3>
-              {video.attributes.description && (
+              {video.description && (
                 <p className="text-sm opacity-90 line-clamp-3 mb-3">
-                  {video.attributes.description}
+                  {video.description}
                 </p>
               )}
               <div className="flex items-center space-x-2">
