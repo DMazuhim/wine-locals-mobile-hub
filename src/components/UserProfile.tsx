@@ -9,7 +9,7 @@ import OrdersList from './OrdersList';
 import VouchersList from './VouchersList';
 import ChangePassword from './ChangePassword';
 
-type ViewType = 'profile' | 'orders' | 'canceledOrders' | 'vouchers' | 'security';
+type ViewType = 'profile' | 'orders' | 'vouchers' | 'security';
 
 const UserProfile: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -45,11 +45,7 @@ const UserProfile: React.FC = () => {
   }
 
   if (currentView === 'orders') {
-    return <OrdersList jwt={jwt} type="active" onBack={() => setCurrentView('profile')} />;
-  }
-
-  if (currentView === 'canceledOrders') {
-    return <OrdersList jwt={jwt} type="canceled" onBack={() => setCurrentView('profile')} />;
+    return <OrdersList jwt={jwt} onBack={() => setCurrentView('profile')} />;
   }
 
   if (currentView === 'vouchers') {
