@@ -15,7 +15,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange })
   ];
 
   return (
-    <div className="tab-navigation bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800">
+    <div className="tab-navigation bg-white">
       <div className="flex h-full">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -26,13 +26,13 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange })
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`tab-button flex-1 flex flex-col items-center justify-center space-y-1 transition-all duration-300 ${
-                isActive ? 'text-white' : 'text-purple-200 hover:text-white'
+                isActive ? 'text-black' : 'text-gray-500 hover:text-black'
               }`}
             >
               <Icon className="w-6 h-6" />
               <span className="text-xs font-medium">{tab.label}</span>
               {isActive && (
-                <div className="w-8 h-0.5 bg-white rounded-full"></div>
+                <div className="w-8 h-0.5 bg-black rounded-full"></div>
               )}
             </button>
           );

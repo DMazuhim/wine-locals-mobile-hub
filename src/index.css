@@ -105,7 +105,7 @@
   left: 0;
   right: 0;
   height: 80px;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
   z-index: 9999;
   backdrop-filter: blur(10px);
 }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Share, Play } from 'lucide-react';
 
@@ -79,7 +78,6 @@ const YouTubeShorts: React.FC = () => {
     } else {
       navigator.clipboard.writeText(shareUrl);
       console.log('Link copiado:', shareUrl);
-      // Aqui você pode adicionar um toast para informar que o link foi copiado
     }
   };
 
@@ -244,12 +242,6 @@ const YouTubeShorts: React.FC = () => {
                   {video.description}
                 </p>
               )}
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-purple-500 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-bold">WL</span>
-                </div>
-                <span className="text-sm font-medium">@winelocals</span>
-              </div>
             </div>
           </div>
 
