@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 type VideoGalleryItem = {
   playback_id?: string;
@@ -38,6 +38,7 @@ type Props = {
   item: VideoGalleryItem;
   autoPlay?: boolean;
   muted?: boolean;
+  play?: boolean; // true se deve realmente tocar
   height?: string;
   width?: string;
   className?: string;
@@ -47,33 +48,53 @@ const MuxOrYoutubePlayer: React.FC<Props> = ({
   item,
   autoPlay = true,
   muted = false,
+  play = true, // novo controle!
   height = "100%",
   width = "100%",
   className = "",
 }) => {
   const detection = detectVideoSource(item);
 
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (!videoRef.current) return;
+    if (play) {
+      videoRef.current.currentTime = 0;
+      const playPromise = videoRef.current.play();
+      if (playPromise && typeof playPromise.then === "function") {
+        playPromise.catch(() => {});
+      }
+    } else {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  }, [play]);
+
   if (detection.type === "mux" && detection.playbackId) {
-    const muxUrl = `https://stream.mux.com/${detection.playbackId}.m3u8`;
-    // Use video/mp4 fallback for autoplay (mux auto-creates mp4 proxy)
     const muxMp4Url = `https://stream.mux.com/${detection.playbackId}/medium.mp4`;
     return (
       <video
+        ref={videoRef}
         className={className}
         style={{ width, height, objectFit: "cover", background: "black" }}
         src={muxMp4Url}
-        autoPlay={autoPlay}
+        autoPlay={autoPlay && play}
         controls={false}
-        muted={muted}
+        muted={muted ? true : false}
         loop
         playsInline
       />
     );
   }
+
   if (detection.type === "youtube" && detection.youtubeId) {
-    // https://developers.google.com/youtube/player_parameters
-    // autoplay=1, mute=0 for sound, modestbranding, loop, controls=0
-    const url = `https://www.youtube.com/embed/${detection.youtubeId}?autoplay=1&mute=${muted ? 1 : 0}&controls=0&loop=1&playlist=${detection.youtubeId}&modestbranding=1&showinfo=0&playsinline=1`;
+    /**
+     * No mobile, browsers bloqueiam autoplay com áudio em iframes externos (YouTube).
+     * Podemos tentar autoplay, mas o áudio SÓ toca se o usuário interage com a página/navegador.
+     * Vamos trocar playlist apenas se play estiver ativo.
+    */
+    const url = `https://www.youtube.com/embed/${detection.youtubeId}?autoplay=${(autoPlay && play) ? 1 : 0}&mute=${muted ? 1 : 0}&controls=0&loop=1&playlist=${detection.youtubeId}&modestbranding=1&showinfo=0&playsinline=1`;
     return (
       <iframe
         className={className}
@@ -83,6 +104,7 @@ const MuxOrYoutubePlayer: React.FC<Props> = ({
         allow="autoplay; encrypted-media"
         allowFullScreen
         title="YouTube player"
+        tabIndex={-1}
       ></iframe>
     );
   }

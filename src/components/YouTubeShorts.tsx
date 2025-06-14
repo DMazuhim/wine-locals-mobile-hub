@@ -192,6 +192,7 @@ const YouTubeShorts: React.FC = () => {
             animationClass={idx === currentIndex ? animationClass : ""}
             height={VISIBLE_HEIGHT}
             width={VISIBLE_WIDTH}
+            isActive={idx === currentIndex}
           />
         </div>
       ))}

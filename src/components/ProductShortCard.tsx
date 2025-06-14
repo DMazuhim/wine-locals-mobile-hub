@@ -17,6 +17,7 @@ interface ProductShortCardProps {
   animationClass?: string;
   height?: string;
   width?: string;
+  isActive?: boolean;
 }
 
 const ProductShortCard: React.FC<ProductShortCardProps> = ({
@@ -24,7 +25,8 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
   onShoppingBagClick,
   animationClass = "",
   height = "100vh",
-  width = "100vw"
+  width = "100vw",
+  isActive = false,
 }) => {
   const [liked, setLiked] = useState(false);
   // Seleciona primeiro item do videoGallery
@@ -53,8 +55,9 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
       {/* Vídeo em destaque */}
       <MuxOrYoutubePlayer
         item={videoItem}
-        autoPlay
-        muted={false}
+        autoPlay={isActive}
+        muted={!isActive}
+        play={isActive}
         height="100%"
         width="100%"
         className="absolute inset-0 z-0"
