@@ -76,7 +76,7 @@ const YouTubeShorts: React.FC = () => {
   useEffect(() => {
     // Scroll para o card atual quando currentIndex muda
     if (containerRef.current) {
-      const node = containerRefRef.current?.children[currentIndex] as HTMLElement;
+      const node = containerRef.current.children[currentIndex] as HTMLElement;
       if (node) {
         node.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
