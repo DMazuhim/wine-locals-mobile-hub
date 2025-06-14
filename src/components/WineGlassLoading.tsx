@@ -7,7 +7,13 @@ const WINE_COLOR = "#a200fc";
 
 const WineGlassLoading: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full bg-white animate-fade-in">
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white animate-fade-in"
+      style={{
+        width: "100vw",
+        height: "100vh",
+      }}
+    >
       <div
         style={{
           width: ICON_SIZE,
@@ -48,3 +54,4 @@ const WineGlassLoading: React.FC = () => {
 };
 
 export default WineGlassLoading;
+
