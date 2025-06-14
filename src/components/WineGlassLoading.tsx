@@ -1,104 +1,85 @@
 
 import React from "react";
+import { Wine } from "lucide-react";
 
-// SVG copo de vinho arredondado, inspirado no print fornecido.
+const WINE_COLOR = "#a200fc";
+
+// Tamanho e proporção ajustáveis para o loader
+const ICON_SIZE = 88;
+
 const WineGlassLoading: React.FC = () => {
+  // A altura máxima relativa do "vinho" preenchendo a taça sobre o SVG
+  // Usando CSS keyframes e inline style para controlar a animação
   return (
     <div className="flex flex-col items-center justify-center w-full h-full bg-white animate-fade-in">
-      <svg
-        width="88"
-        height="120"
-        viewBox="0 0 88 120"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ display: "block" }}
+      <div
+        style={{
+          position: "relative",
+          width: ICON_SIZE,
+          height: ICON_SIZE * 1.2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
-        {/* Topo oval menor */}
-        <ellipse cx="44" cy="15" rx="31" ry="7" stroke="#444" strokeWidth="1.5" fill="#fff"/>
-
-        {/* Bordas do copo (bem redondinho) */}
-        <path
-          d="
-            M13 17 
-            Q13 85 44 108 
-            Q75 85 75 17
-            "
+        {/* Wine glass icon */}
+        <Wine
+          size={ICON_SIZE}
           stroke="#444"
-          strokeWidth="2"
-          fill="white"
+          strokeWidth={2.1}
+          style={{
+            display: "block",
+            position: "relative",
+            zIndex: 2,
+            filter: "drop-shadow(0 2px 0px #eee)",
+          }}
         />
-
-        {/* Faixa interna acinzentada */}
-        <path
-          d="
-            M23 23 
-            Q18 58 44 104"
-          stroke="#bbb"
-          strokeWidth="4"
-          fill="none"
-          opacity="0.44"
-        />
-
-        {/* Vinho - formato de onda preenchendo só a barriga */}
-        <g>
-          <clipPath id="wine-clip">
-            <path
-              d="
-                M13 17 
-                Q13 85 44 108 
-                Q75 85 75 17
-                Z
-              "
-            />
-          </clipPath>
-          <path
-            clipPath="url(#wine-clip)"
-            fill="#a200fc"
-            // Forma da onda preenchendo o fundo, animada para subir
-            d="
-              M20 75
-              Q37 85 44 84
-              Q51 83 68 75
-              Q73 77 75 85
-              Q60 107 44 107
-              Q28 107 14 87
-              Q17 80 20 75
-              Z
-            "
-          >
-            <animate 
-              attributeName="d"
-              dur="1.2s"
-              repeatCount="1"
-              fill="freeze"
-              values="
-                M20 112 Q37 112 44 112 Q51 112 68 112 Q73 113 75 113 Q60 113 44 113 Q28 113 14 113 Q17 113 20 112 Z;
-                M20 75 Q37 85 44 84 Q51 83 68 75 Q73 77 75 85 Q60 107 44 107 Q28 107 14 87 Q17 80 20 75 Z
-              "
-            />
-          </path>
-          {/* Pequena sombra do vinho na borda */}
-          <ellipse
-            cx="62"
-            cy="87"
-            rx="8"
-            ry="2"
-            fill="#480070"
-            opacity="0.22"
-            clipPath="url(#wine-clip)"
-          />
-        </g>
-        {/* Base do copo */}
-        <ellipse
-          cx="44"
-          cy="108"
-          rx="11"
-          ry="2"
-          fill="#fff"
-          stroke="#ddd"
-          strokeWidth="1"
-        />
-      </svg>
+        {/* O vinho enchendo a taça */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            bottom: 0,
+            width: "100%",
+            height: "100%",
+            overflow: "hidden",
+            pointerEvents: "none",
+            zIndex: 1,
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center"
+          }}
+          aria-hidden
+        >
+          <div
+            className="wine-loader-bar"
+            style={{
+              width: ICON_SIZE * 0.53,
+              height: ICON_SIZE * 0.63,
+              background: `linear-gradient(180deg, ${WINE_COLOR} 80%, #480070 100%)`,
+              borderRadius: `0 0 ${ICON_SIZE * 0.38}px ${ICON_SIZE * 0.38}px/0 0 ${ICON_SIZE * 0.39}px ${ICON_SIZE * 0.39}px `,
+              boxShadow: `0 2px 6px 0 #c9a7f944`,
+              transform: "translateY(100%)",
+              animation: "wine-fillup 1.2s cubic-bezier(0.44, 1, 0.62, 1) forwards",
+              // Bem centralizada na taça
+              marginLeft: ICON_SIZE * 0.233,
+              marginBottom: ICON_SIZE * 0.17,
+            }}
+          ></div>
+        </div>
+        {/* Keyframes animacao
+          O keyframes está aqui inline, mas ideal seria no css global/tailwind config
+        */}
+        <style>
+        {`
+          @keyframes wine-fillup {
+            0%   { transform: translateY(100%); opacity:0.4;}
+            40%  { opacity: 1; }
+            100% { transform: translateY(0); opacity:1;}
+          }
+        `}
+        </style>
+      </div>
       <div className="mt-5 text-neutral-700 text-sm font-medium tracking-wide">
         Carregando experiências...
       </div>
