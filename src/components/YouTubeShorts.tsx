@@ -48,12 +48,32 @@ const YouTubeShorts: React.FC = () => {
         const data: ApiResponse = await response.json();
         console.log('API products result:', data);
 
-        // Novo filtro: pega produtos que possuem PELO MENOS 1 vídeo com playback_id válido, não só no primeiro vídeo
+        // LOG: Detalhar os produtos e videoGallery recebidos
+        if (Array.isArray(data.data)) {
+          data.data.forEach((p, idx) => {
+            console.log(`[Produto #${idx}] id=${p.id}, name=${p.attributes?.name}`);
+            if (p.attributes?.videoGallery) {
+              p.attributes.videoGallery.forEach((v, vidx) => {
+                console.log(
+                  `  [videoGallery #${vidx}] playback_id=${v.playback_id}, title=${v.title}`
+                );
+              });
+            } else {
+              console.log('  Nenhum videoGallery.');
+            }
+          });
+        }
+
+        // Aplicar filtro exatamente como esperado
         const filtered = data.data.filter(
-            (p) =>
-              p.attributes?.videoGallery?.some((video) => !!video.playback_id)
-          );
+          (p) =>
+            Array.isArray(p.attributes?.videoGallery) &&
+            p.attributes.videoGallery.some(
+              (video) => !!video.playback_id && typeof video.playback_id === 'string'
+            )
+        );
         console.log('Produtos encontrados após filtro:', filtered);
+
         setProducts(filtered);
       } finally {
         setLoading(false);
