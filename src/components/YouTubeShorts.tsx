@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ProductShortCard from './ProductShortCard';
 
 type Product = {
@@ -11,7 +11,6 @@ type Product = {
   price: number;
 };
 
-// Helper: extrair local e nome parceiro de um produto
 function extractProductFields(raw: any): Product {
   const location = `${raw?.city ? raw.city : ''}${raw?.state_code ? ' - ' + raw.state_code : ''}`.trim().toUpperCase();
   return {
@@ -29,7 +28,9 @@ const YouTubeShorts: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Fetch produtos do novo endpoint
+  // Ref para impedir múltiplos scroll updates simultâneos
+  const isScrolling = useRef(false);
+
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -38,7 +39,6 @@ const YouTubeShorts: React.FC = () => {
           "https://api.guiawinelocals.com/api/products?filters[videoGallery][title][$notNull]=true&pagination[pageSize]=1000";
         const response = await fetch(url);
         const result = await response.json();
-        // formata produtos válidos (com videoGallery)
         const formatted = (result.data || [])
           .filter((item: any) => !!item.videoGallery && item.videoGallery.length > 0)
           .map(extractProductFields);
@@ -52,15 +52,32 @@ const YouTubeShorts: React.FC = () => {
     fetchProducts();
   }, []);
 
-  // Snap scroll vertical - TikTok style
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const container = e.currentTarget;
-    const itemHeight = container.clientHeight;
-    const newIndex = Math.round(container.scrollTop / itemHeight);
-    if (newIndex !== currentIndex && newIndex >= 0 && newIndex < products.length) {
-      setCurrentIndex(newIndex);
+  // Scroll behavior
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (isScrolling.current) return;
+    if (e.deltaY > 30 && currentIndex < products.length - 1) {
+      setCurrentIndex((idx) => idx + 1);
+      isScrolling.current = true;
+      setTimeout(() => { isScrolling.current = false; }, 400);
+    }
+    if (e.deltaY < -30 && currentIndex > 0) {
+      setCurrentIndex((idx) => idx - 1);
+      isScrolling.current = true;
+      setTimeout(() => { isScrolling.current = false; }, 400);
     }
   };
+
+  useEffect(() => {
+    // Scroll para o card atual quando currentIndex muda
+    if (containerRef.current) {
+      const node = containerRef.current.children[currentIndex] as HTMLElement;
+      if (node) {
+        node.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, [currentIndex]);
 
   if (loading) {
     return (
@@ -81,13 +98,20 @@ const YouTubeShorts: React.FC = () => {
   return (
     <div
       className="h-full overflow-y-scroll snap-y snap-mandatory bg-neutral-950 youtube-container"
-      onScroll={handleScroll}
+      ref={containerRef}
+      tabIndex={0}
+      onWheel={handleWheel}
       style={{ scrollBehavior: 'smooth' }}
     >
       {products.map((product, idx) => (
         <div
           key={product.id}
           className="relative h-full w-full snap-start flex-shrink-0 flex items-center justify-center"
+          style={{
+            minHeight: '100%',
+            height: '100vh',
+            maxHeight: '100vh'
+          }}
         >
           <ProductShortCard product={product} />
         </div>

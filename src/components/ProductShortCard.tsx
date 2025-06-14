@@ -19,9 +19,9 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({ product }) => {
     `https://image.mux.com/${product.videoGallery?.[0]?.playback_id}/thumbnail.jpg?width=600&fit_mode=pad`;
 
   return (
-    <div className="relative m-auto max-w-[360px] min-h-[480px] rounded-2xl overflow-hidden bg-white shadow-lg flex flex-col justify-between">
+    <div className="relative m-auto max-w-[400px] min-h-[520px] rounded-2xl overflow-hidden bg-white shadow-lg flex flex-col justify-between">
       {/* Imagem/Vídeo */}
-      <div className="relative h-64 w-full">
+      <div className="relative h-[380px] w-full">
         <img
           src={thumb}
           alt={product.name}
@@ -39,12 +39,7 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({ product }) => {
         <div className="text-base font-bold leading-tight text-neutral-900 mb-0.5">{product.name}</div>
         <div className="text-sm text-neutral-600 font-medium mb-4">{product.partnerName}</div>
 
-        {/* Navegação fake dos dots */}
-        <div className="flex items-center space-x-1 mb-4">
-          <span className="w-2 h-2 bg-primary rounded-full block" />
-          <span className="w-2 h-2 bg-muted rounded-full block" />
-          <span className="w-2 h-2 bg-muted rounded-full block" />
-        </div>
+        {/* Removido os dots de navegação */}
 
         <div className="text-xs text-neutral-500 font-medium mb-1">Diariamente</div>
         <div>
