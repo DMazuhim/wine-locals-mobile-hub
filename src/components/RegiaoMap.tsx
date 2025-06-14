@@ -1,0 +1,184 @@
+
+import React, { useEffect, useRef, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import { useProductsPorRegiao } from "@/hooks/useProductsPorRegiao";
+import { MapPin, Map } from "lucide-react";
+import WineGlassLoading from "./WineGlassLoading";
+import { toast } from "@/hooks/use-toast";
+
+interface RegiaoMapProps {
+  onPinClick: (product: any) => void;
+  selectedProduct: any | null;
+}
+
+const mapBoundsPorRegiao: Record<string, [number, number, number, number]> = {
+  "Vale dos Vinhedos": [-51.655, -29.235, -51.450, -29.010],
+  "Serra Gaúcha": [-52, -29.5, -50.9, -28.5],
+  "Campanha Gaúcha": [-56.2, -31.3, -53.8, -29.1],
+  "Serra Catarinense": [-50.7, -28.5, -49.8, -27.3],
+  // Adicione novas regiões e bounds se necessário.
+};
+
+const mapCenterPorRegiao: Record<string, [number, number]> = {
+  "Vale dos Vinhedos": [-51.6, -29.15],
+  "Serra Gaúcha": [-51.5, -29],
+  "Campanha Gaúcha": [-55, -30.3],
+  "Serra Catarinense": [-50.2, -27.85],
+};
+
+function pedirTokenManual(): string | null {
+  const key = "mapbox-public-token";
+  let _token = localStorage.getItem(key);
+  if (!_token) {
+    _token = prompt("Insira seu Mapbox Public Token (https://account.mapbox.com/):") || "";
+    if (_token) {
+      localStorage.setItem(key, _token);
+      toast({
+        title: "Token adicionado",
+        description: "Mapbox Public Token salvo localmente.",
+      });
+    }
+  }
+  return _token;
+}
+
+const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const [regiao, setRegiao] = useState<string>("");
+  const [manualToken, setManualToken] = useState<string | null>(null);
+
+  // Busca produtos agrupados por região
+  const { regioes, products, loading, error } = useProductsPorRegiao();
+
+  useEffect(() => {
+    if (!mapContainer.current) return;
+
+    let token = manualToken;
+    if (!token) {
+      token = pedirTokenManual();
+      setManualToken(token);
+    }
+    if (!token) return;
+
+    mapboxgl.accessToken = token;
+
+    mapRef.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/light-v11",
+      center: [-51.5, -29], // centro inicial: Serra Gaúcha
+      zoom: 5,
+      attributionControl: false,
+      projection: "globe",
+      pitch: 45,
+    });
+
+    // Add controls
+    mapRef.current.addControl(new mapboxgl.NavigationControl({visualizePitch: true}), "top-right");
+
+    // Add atmosphere
+    mapRef.current.on("style.load", () => {
+      mapRef.current?.setFog({
+        color: "rgb(255,255,255)",
+        "high-color": "rgb(200,200,225)",
+        "horizon-blend": 0.2,
+      });
+    });
+
+    return () => {
+      mapRef.current?.remove();
+    };
+  // eslint-disable-next-line
+  }, [manualToken]);
+
+  // Atualiza pins e foca na região quando muda filtro
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !regioes.length) return;
+
+    // Remove markers antigos
+    (map as any)._customMarkers = (map as any)._customMarkers || [];
+    (map as any)._customMarkers.forEach((m: any) => m.remove && m.remove());
+    (map as any)._customMarkers = [];
+
+    // Foco bounds/região
+    if (regiao && mapBoundsPorRegiao[regiao]) {
+      map.fitBounds(mapBoundsPorRegiao[regiao], { padding: 50, duration: 1000 });
+    } else {
+      map.flyTo({ center: [-51.5, -29], zoom: 5, duration: 1000 });
+    }
+
+    // Adiciona marcadores dos produtos (filtrados)
+    let filtered = products;
+    if (regiao) filtered = products.filter((p) => p.regiao === regiao);
+
+    filtered.forEach((product) => {
+      if (!product.longitude || !product.latitude) return;
+
+      // Cria DOM para marker customizado
+      const el = document.createElement("div");
+      el.className = "mapbox-marker-pin";
+      el.style.width = "34px";
+      el.style.height = "34px";
+      el.style.cursor = "pointer";
+      el.style.display = "flex";
+      el.style.alignItems = "center";
+      el.style.justifyContent = "center";
+      el.style.borderRadius = "50%";
+      el.style.background = "rgba(255,255,255,0.90)";
+      el.style.boxShadow = "0 2px 8px 0 rgba(0,0,0,0.08)";
+      el.innerHTML = `<svg viewBox="0 0 24 24" width="28" height="28" fill="#a855f7" stroke="#a855f7" stroke-width="2"><path d="M12 21s-6-5.686-6-10A6 6 0 0 1 18 11c0 4.314-6 10-6 10Z"/><circle cx="12" cy="11" r="3" fill="#fff"/></svg>`;
+
+      el.onclick = (e) => {
+        e.stopPropagation();
+        onPinClick(product);
+      };
+
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([product.longitude, product.latitude])
+        .addTo(map);
+
+      (map as any)._customMarkers.push(marker);
+    });
+  }, [regiao, products, regioes.length, onPinClick]);
+
+  return (
+    <div className="w-full h-[74vh] relative flex flex-col justify-start items-center">
+      {/* Filtro de regiões */}
+      <div className="absolute top-2 left-1/2 z-20 -translate-x-1/2 flex gap-2 flex-wrap bg-white/90 px-4 py-2 rounded-full shadow">
+        <label className="text-sm font-semibold flex items-center gap-2">
+          <Map className="w-4 h-4 text-primary" />
+          Ver região:
+        </label>
+        <select
+          className="border px-2 rounded text-sm font-medium"
+          value={regiao}
+          onChange={e => setRegiao(e.target.value)}
+        >
+          <option value="">Todas regiões</option>
+          {regioes.map((reg) => (
+            <option key={reg} value={reg}>{reg}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Mapa */}
+      <div ref={mapContainer} className="relative rounded-lg shadow-lg w-[95vw] max-w-[812px] h-[73vh] z-10" />
+      {loading && <WineGlassLoading />}
+      {error && (
+        <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-30">
+          <span className="text-red-500 text-lg">Erro ao carregar mapa e produtos</span>
+        </div>
+      )}
+      {/* CSS para o pin */}
+      <style>
+        {`
+          .mapbox-marker-pin { transition: transform 0.2s; }
+          .mapbox-marker-pin:hover { transform: scale(1.15); box-shadow: 0 4px 16px 0 #a855f777;}
+        `}
+      </style>
+    </div>
+  );
+};
+
+export default RegiaoMap;
