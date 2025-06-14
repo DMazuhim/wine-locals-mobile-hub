@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Heart, ShoppingBag } from 'lucide-react';
+import { Heart, ShoppingBag, Pause, Play, Share2 } from 'lucide-react';
 import MuxOrYoutubePlayer from './MuxOrYoutubePlayer';
 
 interface ProductShortCardProps {
@@ -29,6 +29,7 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
   isActive = false,
 }) => {
   const [liked, setLiked] = useState(false);
+  const [paused, setPaused] = useState(false);
   // Seleciona primeiro item do videoGallery
   const videoItem = product.videoGallery?.[0];
 
@@ -41,6 +42,37 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
     e.stopPropagation();
     if (product.slug) {
       onShoppingBagClick(product.slug);
+    }
+  };
+
+  const handlePauseToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isActive) return;
+    setPaused((prev) => !prev);
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!product.slug) return;
+    const url = `https://wine-locals.com/p/${product.slug}`;
+    const shareData = {
+      title: product.name,
+      text: `${product.name} em ${product.location} por R$ ${Number(product.price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
+      url,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // Ignora se o usuário cancelar
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        alert('Link copiado para a área de transferência!');
+      } catch {
+        alert('Não foi possível copiar o link. Acesse: ' + url);
+      }
     }
   };
 
@@ -57,7 +89,8 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
         item={videoItem}
         autoPlay={isActive}
         muted={!isActive}
-        play={isActive}
+        play={isActive && !paused}
+        paused={paused}
         height="100%"
         width="100%"
         className="absolute inset-0 z-0"
@@ -65,7 +98,7 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
 
       {/* Overlay de gradiente na parte inferior */}
       <div className="absolute inset-x-0 bottom-0 h-2/5 pointer-events-none z-10" style={{
-        background: 'linear-gradient(0deg, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.2) 70%, rgba(0,0,0,0.00) 100%)'
+        background: 'linear-gradient(0deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.2) 70%, rgba(0,0,0,0.00) 100%)'
       }} />
 
       {/* Botões no topo */}
@@ -84,7 +117,26 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
         >
           <ShoppingBag size={24} className="text-neutral-700" />
         </button>
+        <button
+          aria-label="Compartilhar"
+          onClick={handleShare}
+          className="rounded-full p-2 bg-white/80 hover:bg-white transition"
+        >
+          <Share2 size={22} className="text-neutral-700" />
+        </button>
       </div>
+
+      {/* Botão Play/Pause central, só no card ativo e sobre o vídeo */}
+      {isActive && (
+        <button
+          onClick={handlePauseToggle}
+          aria-label={paused ? "Tocar vídeo" : "Pausar vídeo"}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-black/60 hover:bg-black/80 text-white rounded-full p-4"
+          style={{ transition: 'background 0.2s' }}
+        >
+          {paused ? <Play size={36} /> : <Pause size={36} />}
+        </button>
+      )}
 
       {/* Infos pequenas no rodapé, sobre o vídeo */}
       <div className="relative z-20 w-full px-4 pb-6 select-none">

@@ -7,7 +7,6 @@ type VideoGalleryItem = {
   videoUrl?: string;
 };
 
-// Detects if it's a youtube id/link or a mux playback id
 function detectVideoSource(item: VideoGalleryItem): {
   type: "mux" | "youtube" | null;
   playbackId?: string;
@@ -15,7 +14,6 @@ function detectVideoSource(item: VideoGalleryItem): {
   url?: string;
 } {
   if (!item) return { type: null };
-  // 1. YouTube
   if (item.youtubeId) {
     return { type: "youtube", youtubeId: item.youtubeId };
   }
@@ -26,11 +24,9 @@ function detectVideoSource(item: VideoGalleryItem): {
       youtubeId: ytMatch ? ytMatch[1] : undefined,
     };
   }
-  // 2. Mux
   if (item.playback_id) {
     return { type: "mux", playbackId: item.playback_id };
   }
-  // 3. Fallback unsupported
   return { type: null };
 }
 
@@ -38,7 +34,8 @@ type Props = {
   item: VideoGalleryItem;
   autoPlay?: boolean;
   muted?: boolean;
-  play?: boolean; // true se deve realmente tocar
+  play?: boolean; // se deve tocar de fato (cartão ativo e não pausado)
+  paused?: boolean;
   height?: string;
   width?: string;
   className?: string;
@@ -48,28 +45,27 @@ const MuxOrYoutubePlayer: React.FC<Props> = ({
   item,
   autoPlay = true,
   muted = false,
-  play = true, // novo controle!
+  play = true,   // está ativo e não está pausado
+  paused = false,
   height = "100%",
   width = "100%",
   className = "",
 }) => {
   const detection = detectVideoSource(item);
-
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     if (!videoRef.current) return;
-    if (play) {
-      videoRef.current.currentTime = 0;
+    // Sincroniza play/pause
+    if (play && !paused) {
       const playPromise = videoRef.current.play();
       if (playPromise && typeof playPromise.then === "function") {
         playPromise.catch(() => {});
       }
     } else {
       videoRef.current.pause();
-      videoRef.current.currentTime = 0;
     }
-  }, [play]);
+  }, [play, paused]);
 
   if (detection.type === "mux" && detection.playbackId) {
     const muxMp4Url = `https://stream.mux.com/${detection.playbackId}/medium.mp4`;
@@ -79,9 +75,9 @@ const MuxOrYoutubePlayer: React.FC<Props> = ({
         className={className}
         style={{ width, height, objectFit: "cover", background: "black" }}
         src={muxMp4Url}
-        autoPlay={autoPlay && play}
+        autoPlay={autoPlay && play && !paused}
         controls={false}
-        muted={muted ? true : false}
+        muted={muted}
         loop
         playsInline
       />
@@ -89,12 +85,9 @@ const MuxOrYoutubePlayer: React.FC<Props> = ({
   }
 
   if (detection.type === "youtube" && detection.youtubeId) {
-    /**
-     * No mobile, browsers bloqueiam autoplay com áudio em iframes externos (YouTube).
-     * Podemos tentar autoplay, mas o áudio SÓ toca se o usuário interage com a página/navegador.
-     * Vamos trocar playlist apenas se play estiver ativo.
-    */
-    const url = `https://www.youtube.com/embed/${detection.youtubeId}?autoplay=${(autoPlay && play) ? 1 : 0}&mute=${muted ? 1 : 0}&controls=0&loop=1&playlist=${detection.youtubeId}&modestbranding=1&showinfo=0&playsinline=1`;
+    // Para iframes do YouTube, não há API de controles: troca a url (autoplay=1/0)
+    // Importante: autoplay+áudio só funciona após interação manual do usuário!
+    const url = `https://www.youtube.com/embed/${detection.youtubeId}?autoplay=${(autoPlay && play && !paused) ? 1 : 0}&mute=${muted ? 1 : 0}&controls=0&loop=1&playlist=${detection.youtubeId}&modestbranding=1&showinfo=0&playsinline=1`;
     return (
       <iframe
         className={className}
