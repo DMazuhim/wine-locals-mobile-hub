@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Heart, ShoppingBag, Pause, Play, Share2 } from 'lucide-react';
 import MuxOrYoutubePlayer from './MuxOrYoutubePlayer';
@@ -30,7 +29,6 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
 }) => {
   const [liked, setLiked] = useState(false);
   const [paused, setPaused] = useState(false);
-  // Novo estado: controla se os controles devem aparecer
   const [showControls, setShowControls] = useState<boolean>(false);
 
   // Seleciona primeiro item do videoGallery
@@ -48,10 +46,19 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
     }
   };
 
+  // Atualiza para esconder os controles ao dar play novamente
   const handlePauseToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isActive) return;
-    setPaused((prev) => !prev);
+    setPaused((prev) => {
+      // Se estava pausado, agora está tocando: ocultar controles
+      if (prev) {
+        setShowControls(false);
+        return false;
+      } else {
+        return true;
+      }
+    });
   };
 
   const handleShare = async (e: React.MouseEvent) => {
@@ -173,4 +180,3 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
 };
 
 export default ProductShortCard;
-
