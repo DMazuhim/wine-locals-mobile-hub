@@ -1,18 +1,38 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import ProductShortCard from './ProductShortCard';
 import PasseioWebViewModal from './PasseioWebViewModal';
 
+// Tipos
 type Product = {
   id: number;
   slug?: string;
   name: string;
   location: string;
   partnerName: string;
-  videoGallery: { playback_id: string; thumbUrl?: string }[];
+  videoGallery: { playback_id?: string; youtubeId?: string; videoUrl?: string; thumbUrl?: string }[];
   price: number;
 };
 
+// Nova função para verificar se algum vídeo é "válido" (playback_id, youtubeId ou videoUrl presente)
+function hasPlayableVideo(videoGallery: Product['videoGallery']) {
+  if (!Array.isArray(videoGallery) || !videoGallery.length) return false;
+  return videoGallery.some(
+    v => !!(v && (v.playback_id || v.youtubeId || v.videoUrl))
+  );
+}
+
 function extractProductFields(raw: any): Product {
+  // Garante que videoGallery tem os campos corretos
+  const vg =
+    Array.isArray(raw.videoGallery) && raw.videoGallery.length
+      ? raw.videoGallery.map((v: any) => ({
+          playback_id: v.playback_id,
+          youtubeId: v.youtubeId,
+          videoUrl: v.videoUrl,
+          thumbUrl: v.thumbUrl,
+        }))
+      : [];
   const location = `${raw?.city ? raw.city : ''}${raw?.state_code ? ' - ' + raw.state_code : ''}`.trim().toUpperCase();
   return {
     id: raw.id,
@@ -20,7 +40,7 @@ function extractProductFields(raw: any): Product {
     name: raw.title || raw.name,
     location,
     partnerName: raw?.partner?.name ?? '',
-    videoGallery: Array.isArray(raw.videoGallery) ? raw.videoGallery : [],
+    videoGallery: vg,
     price: (raw?.price || raw?.price_from || raw?.price_min || 0),
   };
 }
@@ -53,8 +73,11 @@ const YouTubeShorts: React.FC = () => {
         const response = await fetch(url);
         const result = await response.json();
         const formatted = (result.data || [])
-          .filter((item: any) => !!item.videoGallery && item.videoGallery.length > 0)
-          .map(extractProductFields);
+          .map(extractProductFields)
+          .filter(
+            // Só mantém quem tem vídeo válido
+            (product: Product) => hasPlayableVideo(product.videoGallery)
+          );
         setProducts(formatted);
       } catch {
         setProducts([]);
@@ -206,3 +229,4 @@ const YouTubeShorts: React.FC = () => {
 };
 
 export default YouTubeShorts;
+
