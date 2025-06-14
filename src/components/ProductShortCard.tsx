@@ -13,9 +13,18 @@ interface ProductShortCardProps {
     price: number;
   };
   onShoppingBagClick: (slug: string) => void;
+  animationClass?: string;
+  height?: string;
+  width?: string;
 }
 
-const ProductShortCard: React.FC<ProductShortCardProps> = ({ product, onShoppingBagClick }) => {
+const ProductShortCard: React.FC<ProductShortCardProps> = ({
+  product,
+  onShoppingBagClick,
+  animationClass = "",
+  height = "100vh",
+  width = "100vw"
+}) => {
   const [liked, setLiked] = useState(false);
   const thumb =
     product.videoGallery?.[0]?.thumbUrl ||
@@ -35,14 +44,16 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({ product, onShopping
 
   return (
     <div
-      className="relative m-auto bg-white flex flex-col justify-between max-w-[420px] min-h-[540px] w-[95vw] h-[540px] sm:h-[600px] overflow-hidden"
+      className={`relative m-auto bg-white flex flex-col justify-between w-full h-full min-h-0 min-w-0 overflow-hidden ${animationClass}`}
+      // Full tela exceto menu
       style={{
         boxSizing: 'border-box',
-        // Removido: borderRadius, boxShadow etc.
+        height,
+        width,
       }}
     >
       {/* Imagem Expandida */}
-      <div className="relative w-full h-[70%]">
+      <div className="relative w-full flex-1 min-h-0 max-h-[65%]">
         <img
           src={thumb}
           alt={product.name}
@@ -68,7 +79,7 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({ product, onShopping
         </div>
       </div>
       {/* Detalhes */}
-      <div className="p-5 flex flex-col flex-1 justify-between">
+      <div className="p-5 flex flex-col justify-between bg-white/80">
         <div>
           <div className="text-xs font-semibold tracking-wide text-white rounded-md px-2 py-0.5 bg-black/60 w-fit mb-2">
             {product.location}

@@ -35,6 +35,12 @@ const YouTubeShorts: React.FC = () => {
   // Ref para bloquear múltiplos scrolls rápidos
   const isScrolling = useRef(false);
 
+  // Novo estado: animação ao passar card
+  const [animationClass, setAnimationClass] = useState<string>("");
+
+  // Direção do último scroll (1=baixo, -1=cima)
+  const directionRef = useRef<number>(1);
+
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -62,16 +68,28 @@ const YouTubeShorts: React.FC = () => {
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (isScrolling.current) return;
     if (e.deltaY > 30 && currentIndex < products.length - 1) {
+      directionRef.current = 1;
+      setAnimationClass("animate-slide-in-right");
       setCurrentIndex((idx) => idx + 1);
       isScrolling.current = true;
       setTimeout(() => { isScrolling.current = false; }, 400);
     }
     if (e.deltaY < -30 && currentIndex > 0) {
+      directionRef.current = -1;
+      setAnimationClass("animate-slide-in-left");
       setCurrentIndex((idx) => idx - 1);
       isScrolling.current = true;
       setTimeout(() => { isScrolling.current = false; }, 400);
     }
   };
+
+  useEffect(() => {
+    // Remove a classe de animação após exibir
+    if (animationClass) {
+      const timeout = setTimeout(() => setAnimationClass(""), 400);
+      return () => clearTimeout(timeout);
+    }
+  }, [animationClass, currentIndex]);
 
   useEffect(() => {
     // Scroll para o card atual quando currentIndex muda
@@ -84,8 +102,8 @@ const YouTubeShorts: React.FC = () => {
   }, [currentIndex]);
 
   // Altura visível: ocupar tudo MENOS o menu fixo de 80px
-  // O card já está limitado para caber nessa área; vamos garantir padding bottom extra na lista para que o card nunca fique sob o menu.
   const VISIBLE_HEIGHT = 'calc(100vh - 80px)';
+  const VISIBLE_WIDTH = '100vw';
 
   if (loading) {
     return (
@@ -112,7 +130,8 @@ const YouTubeShorts: React.FC = () => {
       style={{
         scrollBehavior: 'smooth',
         height: VISIBLE_HEIGHT,
-        paddingBottom: '80px', // Espaço extra para o menu sempre ficar fora do card
+        width: VISIBLE_WIDTH,
+        paddingBottom: '0px', // Não precisamos de espaço extra se o card encaixar
       }}
     >
       {products.map((product, idx) => (
@@ -125,7 +144,13 @@ const YouTubeShorts: React.FC = () => {
             maxHeight: VISIBLE_HEIGHT,
           }}
         >
-          <ProductShortCard product={product} onShoppingBagClick={(slug) => setWebviewSlug(slug)} />
+          <ProductShortCard
+            product={product}
+            onShoppingBagClick={(slug) => setWebviewSlug(slug)}
+            animationClass={idx === currentIndex ? animationClass : ""}
+            height={VISIBLE_HEIGHT}
+            width={VISIBLE_WIDTH}
+          />
         </div>
       ))}
       <PasseioWebViewModal
