@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import { useProductsPorRegiao } from "@/hooks/useProductsPorRegiao";
@@ -24,27 +23,27 @@ const mapBoundsPorRegiao: Record<string, [number, number, number, number]> = {
   "Serra Catarinense": [-50.7, -28.5, -49.8, -27.3],
 };
 
-function pedirTokenManual(): string | null {
-  const key = "mapbox-public-token";
-  let _token = localStorage.getItem(key);
-  if (!_token) {
-    _token = prompt("Insira seu Mapbox Public Token (https://account.mapbox.com/):") || "";
-    if (_token) {
-      localStorage.setItem(key, _token);
-      toast({
-        title: "Token adicionado",
-        description: "Mapbox Public Token salvo localmente.",
-      });
-    }
-  }
-  return _token;
+const MAPBOX_TOKEN_STORAGE_KEY = "mapbox-public-token";
+
+function getManualToken(): string | null {
+  return localStorage.getItem(MAPBOX_TOKEN_STORAGE_KEY) || "";
+}
+
+function setManualToken(token: string) {
+  localStorage.setItem(MAPBOX_TOKEN_STORAGE_KEY, token);
+  toast({
+    title: "Token adicionado",
+    description: "Mapbox Public Token salvo localmente.",
+  });
 }
 
 const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [regiao, setRegiao] = useState<string>("");
-  const [manualToken, setManualToken] = useState<string | null>(null);
+  const [manualToken, setManualTokenState] = useState<string>(getManualToken());
+  const [tokenInput, setTokenInput] = useState<string>(getManualToken());
+  const [tokenError, setTokenError] = useState<string>("");
 
   // Busca regiões do endpoint correto (enum)
   const { regioes, loading: regioesLoading, error: regioesError } = useRegioesFromSearchApi();
@@ -52,32 +51,37 @@ const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) =>
   // Busca produtos agrupados
   const { products, loading: productsLoading, error: productsError } = useProductsPorRegiao();
 
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    let token = manualToken;
-    if (!token) {
-      token = pedirTokenManual();
-      setManualToken(token);
+  // Handler de token
+  const handleTokenSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = tokenInput.trim();
+    if (!/^pk\.[a-zA-Z0-9._-]{10,}$/.test(trimmed)) {
+      setTokenError("Token inválido. Deve começar por 'pk.' e estar correto. Veja em mapbox.com → Tokens.");
+      return;
     }
-    if (!token) return;
+    setManualToken(trimmed);
+    setManualTokenState(trimmed);
+    setTokenError("");
+  };
 
-    mapboxgl.accessToken = token;
+  // Controle do mapa
+  useEffect(() => {
+    if (!mapContainer.current || !manualToken) return;
+
+    mapboxgl.accessToken = manualToken;
 
     mapRef.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/light-v11",
-      center: southAmericaCenter, // America do Sul
+      center: southAmericaCenter, // América do Sul
       zoom: 3.5,
       attributionControl: false,
       projection: "globe",
       pitch: 45,
     });
 
-    // Add controls
     mapRef.current.addControl(new mapboxgl.NavigationControl({visualizePitch: true}), "top-right");
 
-    // Add atmosphere
     mapRef.current.on("style.load", () => {
       mapRef.current?.setFog({
         color: "rgb(255,255,255)",
@@ -89,7 +93,6 @@ const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) =>
     return () => {
       mapRef.current?.remove();
     };
-  // eslint-disable-next-line
   }, [manualToken]);
 
   // Atualiza pins e foca na região quando muda filtro
@@ -97,26 +100,22 @@ const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) =>
     const map = mapRef.current;
     if (!map || regioes.length === 0) return;
 
-    // Remove markers antigos
     (map as any)._customMarkers = (map as any)._customMarkers || [];
     (map as any)._customMarkers.forEach((m: any) => m.remove && m.remove());
     (map as any)._customMarkers = [];
 
-    // Foco bounds/região
     if (regiao && mapBoundsPorRegiao[regiao]) {
       map.fitBounds(mapBoundsPorRegiao[regiao], { padding: 60, duration: 1000 });
     } else {
       map.fitBounds(southAmericaBounds, { padding: 60, duration: 1000 });
     }
 
-    // Adiciona marcadores dos produtos (filtrados)
     let filtered = products;
     if (regiao) filtered = products.filter((p) => p.regiao === regiao);
 
     filtered.forEach((product) => {
       if (!product.longitude || !product.latitude) return;
 
-      // Cria DOM para marker customizado
       const el = document.createElement("div");
       el.className = "mapbox-marker-pin";
       el.style.width = "34px";
@@ -145,6 +144,43 @@ const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) =>
 
   return (
     <div className="w-full h-[74vh] relative flex flex-col justify-start items-center">
+      {/* Campo Token Mapbox se não houver */}
+      {!manualToken && (
+        <form
+          className="absolute top-3 left-1/2 -translate-x-1/2 bg-white z-30 rounded-xl shadow px-4 py-4 flex flex-col gap-2 items-center"
+          style={{ minWidth: 320, maxWidth: 400 }}
+          onSubmit={handleTokenSubmit}
+        >
+          <strong className="text-primary text-lg mb-1">Token Mapbox obrigatório</strong>
+          <label className="text-gray-700 text-sm">
+            Para visualizar o mapa, cole seu <span className="font-semibold">Mapbox Public Token</span> aqui.<br/>
+            <a
+              href="https://account.mapbox.com/access-tokens/"
+              className="text-primary underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Acesse sua conta Mapbox
+            </a>
+          </label>
+          <input
+            type="text"
+            value={tokenInput}
+            onChange={e => setTokenInput(e.target.value)}
+            required
+            placeholder="Ex: pk.eyJ..."
+            className="border p-2 rounded w-full"
+          />
+          {tokenError && <span className="text-red-500 text-xs">{tokenError}</span>}
+          <button
+            type="submit"
+            className="bg-primary text-white font-semibold px-4 py-2 rounded w-full mt-1"
+          >
+            Salvar e abrir mapa
+          </button>
+        </form>
+      )}
+
       {/* Filtro de regiões */}
       <div className="absolute top-2 left-1/2 z-20 -translate-x-1/2 flex gap-2 flex-wrap bg-white/90 px-4 py-2 rounded-full shadow">
         <label className="text-sm font-semibold flex items-center gap-2">
@@ -164,7 +200,7 @@ const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) =>
       </div>
 
       {/* Mapa */}
-      <div ref={mapContainer} className="relative rounded-lg shadow-lg w-[95vw] max-w-[812px] h-[73vh] z-10" />
+      <div ref={mapContainer} className={`relative rounded-lg shadow-lg w-[95vw] max-w-[812px] h-[73vh] z-10 ${!manualToken ? 'opacity-30 pointer-events-none blur-sm' : ''}`} />
       {(regioesLoading || productsLoading) && <WineGlassLoading />}
       {(regioesError || productsError) && (
         <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-30">
