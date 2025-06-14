@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Heart, ShoppingBag } from 'lucide-react';
+import MuxOrYoutubePlayer from './MuxOrYoutubePlayer';
 
 interface ProductShortCardProps {
   product: {
@@ -9,7 +10,7 @@ interface ProductShortCardProps {
     name: string;
     location: string;
     partnerName: string;
-    videoGallery: { playback_id: string; thumbUrl?: string }[];
+    videoGallery: { playback_id?: string; youtubeId?: string; videoUrl?: string; thumbUrl?: string }[];
     price: number;
   };
   onShoppingBagClick: (slug: string) => void;
@@ -26,9 +27,8 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
   width = "100vw"
 }) => {
   const [liked, setLiked] = useState(false);
-  const thumb =
-    product.videoGallery?.[0]?.thumbUrl ||
-    `https://image.mux.com/${product.videoGallery?.[0]?.playback_id}/thumbnail.jpg?width=600&fit_mode=pad`;
+  // Seleciona primeiro item do videoGallery
+  const videoItem = product.videoGallery?.[0];
 
   const handleLikeToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -50,13 +50,14 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
         width,
       }}
     >
-      {/* Imagem em destaque */}
-      <img
-        src={thumb}
-        alt={product.name}
-        className="absolute inset-0 w-full h-full object-cover z-0"
-        draggable={false}
-        style={{ userSelect: 'none', WebkitUserDrag: "none" }}
+      {/* Vídeo em destaque */}
+      <MuxOrYoutubePlayer
+        item={videoItem}
+        autoPlay
+        muted={false}
+        height="100%"
+        width="100%"
+        className="absolute inset-0 z-0"
       />
 
       {/* Overlay de gradiente na parte inferior */}
@@ -82,9 +83,9 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
         </button>
       </div>
 
-      {/* Infos pequenas no rodapé, sobre a imagem */}
+      {/* Infos pequenas no rodapé, sobre o vídeo */}
       <div className="relative z-20 w-full px-4 pb-6 select-none">
-        <div className="bg-black/65 rounded-lg px-3 py-3 flex flex-col gap-1 max-w-[94vw] sm:max-w-[420px] mx-auto">
+        <div className="bg-black/65 rounded-lg px-3 py-2 flex flex-col gap-0.5 max-w-[94vw] sm:max-w-[420px] mx-auto">
           <span className="text-xs font-semibold tracking-wide text-white mb-0.5">
             {product.location}
           </span>
@@ -104,4 +105,3 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
 };
 
 export default ProductShortCard;
-
