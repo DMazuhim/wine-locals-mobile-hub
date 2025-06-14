@@ -2,29 +2,29 @@
 import React from "react";
 
 // O SVG abaixo utiliza uma máscara para animar o vinho "enchendo".
-// A animação aumenta o height do vinho de 0 a 52 ao carregar.
+// Agora o copo ficou mais oval (achatado/largo).
 const WineGlassLoading: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center w-full h-full bg-white animate-fade-in">
       {/* Copo SVG com vinho animando */}
       <svg
-        width="76"
+        width="90"
         height="120"
-        viewBox="0 0 76 120"
+        viewBox="0 0 90 120"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ display: "block" }}
       >
-        {/* Copo contorno */}
-        <ellipse cx="38" cy="16" rx="29" ry="11" stroke="#444" strokeWidth="2" fill="#fff" />
+        {/* Copo contorno - mais oval */}
+        <ellipse cx="45" cy="16" rx="36" ry="8.5" stroke="#444" strokeWidth="2" fill="#fff" />
         <path
-          d="M9 16c0 50 20 90 29 90s29-40 29-90"
+          d="M9 16c0 50 25 90 36 90s36-40 36-90"
           stroke="#444"
           strokeWidth="2"
           fill="none"
         />
         <path
-          d="M19 24c5-8 33-8 38 0"
+          d="M19 24c8-8 54-8 62 0"
           stroke="#ccc"
           strokeLinecap="round"
           strokeWidth="4"
@@ -33,14 +33,14 @@ const WineGlassLoading: React.FC = () => {
         {/* Vinho */}
         <g>
           <clipPath id="wine-fill-clip">
-            <ellipse cx="38" cy="16" rx="29" ry="11"/>
-            <path d="M9 16c0 50 20 90 29 90s29-40 29-90" />
+            <ellipse cx="45" cy="16" rx="36" ry="8.5"/>
+            <path d="M9 16c0 50 25 90 36 90s36-40 36-90" />
           </clipPath>
           {/* Vinho que 'sobe' */}
           <rect
             x="9"
             y="60"
-            width="58"
+            width="72"
             height="52"
             fill="#a21caf"
             clipPath="url(#wine-fill-clip)"
@@ -64,18 +64,17 @@ const WineGlassLoading: React.FC = () => {
             />
           </rect>
         </g>
-        {/* Borda inferior */}
+        {/* Borda inferior - também mais oval */}
         <ellipse
-          cx="38"
+          cx="45"
           cy="106"
-          rx="8"
+          rx="12"
           ry="2"
           fill="#fff"
           stroke="#ddd"
           strokeWidth="1"
         />
       </svg>
-      {/* Text optional */}
       <div className="mt-5 text-neutral-700 text-sm font-medium tracking-wide">
         Carregando experiências...
       </div>
@@ -84,4 +83,3 @@ const WineGlassLoading: React.FC = () => {
 };
 
 export default WineGlassLoading;
-
