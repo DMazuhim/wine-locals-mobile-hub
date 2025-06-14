@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import ProductShortCard from './ProductShortCard';
+import PasseioWebViewModal from './PasseioWebViewModal';
 
 type Product = {
   id: number;
+  slug?: string;
   name: string;
   location: string;
   partnerName: string;
@@ -15,6 +17,7 @@ function extractProductFields(raw: any): Product {
   const location = `${raw?.city ? raw.city : ''}${raw?.state_code ? ' - ' + raw.state_code : ''}`.trim().toUpperCase();
   return {
     id: raw.id,
+    slug: raw.slug,
     name: raw.title || raw.name,
     location,
     partnerName: raw?.partner?.name ?? '',
@@ -27,8 +30,9 @@ const YouTubeShorts: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [webviewSlug, setWebviewSlug] = useState<string | null>(null);
 
-  // Ref para impedir múltiplos scroll updates simultâneos
+  // Ref para bloquear múltiplos scrolls rápidos
   const isScrolling = useRef(false);
 
   useEffect(() => {
@@ -43,7 +47,7 @@ const YouTubeShorts: React.FC = () => {
           .filter((item: any) => !!item.videoGallery && item.videoGallery.length > 0)
           .map(extractProductFields);
         setProducts(formatted);
-      } catch (err) {
+      } catch {
         setProducts([]);
       } finally {
         setLoading(false);
@@ -52,7 +56,7 @@ const YouTubeShorts: React.FC = () => {
     fetchProducts();
   }, []);
 
-  // Scroll behavior
+  // Snap scroll vertical
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
@@ -79,6 +83,9 @@ const YouTubeShorts: React.FC = () => {
     }
   }, [currentIndex]);
 
+  // Garantir que área visível não fica sob menu fixo (80px)
+  const VISIBLE_HEIGHT = 'calc(100vh - 80px)';
+
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center bg-black">
@@ -101,21 +108,29 @@ const YouTubeShorts: React.FC = () => {
       ref={containerRef}
       tabIndex={0}
       onWheel={handleWheel}
-      style={{ scrollBehavior: 'smooth' }}
+      style={{
+        scrollBehavior: 'smooth',
+        height: VISIBLE_HEIGHT,
+      }}
     >
       {products.map((product, idx) => (
         <div
           key={product.id}
-          className="relative h-full w-full snap-start flex-shrink-0 flex items-center justify-center"
+          className="relative w-full snap-start flex-shrink-0 flex items-center justify-center"
           style={{
-            minHeight: '100%',
-            height: '100vh',
-            maxHeight: '100vh'
+            minHeight: VISIBLE_HEIGHT,
+            height: VISIBLE_HEIGHT,
+            maxHeight: VISIBLE_HEIGHT,
           }}
         >
-          <ProductShortCard product={product} />
+          <ProductShortCard product={product} onShoppingBagClick={(slug) => setWebviewSlug(slug)} />
         </div>
       ))}
+      <PasseioWebViewModal
+        open={!!webviewSlug}
+        slug={webviewSlug}
+        onClose={() => setWebviewSlug(null)}
+      />
     </div>
   );
 };
