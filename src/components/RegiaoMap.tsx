@@ -2,7 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import { useProductsPorRegiao } from "@/hooks/useProductsPorRegiao";
-import { MapPin, Map } from "lucide-react";
+import { useRegioesFromSearchApi } from "@/hooks/useRegioesFromSearchApi";
+import { Map } from "lucide-react";
 import WineGlassLoading from "./WineGlassLoading";
 import { toast } from "@/hooks/use-toast";
 
@@ -11,19 +12,16 @@ interface RegiaoMapProps {
   selectedProduct: any | null;
 }
 
+// Bounds globais para América do Sul
+const southAmericaBounds: [number, number, number, number] = [-82, -56, -34, 12];
+const southAmericaCenter: [number, number] = [-56, -15];
+
+// Bound region pode ser extendido por chave (com fallback global)
 const mapBoundsPorRegiao: Record<string, [number, number, number, number]> = {
   "Vale dos Vinhedos": [-51.655, -29.235, -51.450, -29.010],
   "Serra Gaúcha": [-52, -29.5, -50.9, -28.5],
   "Campanha Gaúcha": [-56.2, -31.3, -53.8, -29.1],
   "Serra Catarinense": [-50.7, -28.5, -49.8, -27.3],
-  // Adicione novas regiões e bounds se necessário.
-};
-
-const mapCenterPorRegiao: Record<string, [number, number]> = {
-  "Vale dos Vinhedos": [-51.6, -29.15],
-  "Serra Gaúcha": [-51.5, -29],
-  "Campanha Gaúcha": [-55, -30.3],
-  "Serra Catarinense": [-50.2, -27.85],
 };
 
 function pedirTokenManual(): string | null {
@@ -48,8 +46,11 @@ const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) =>
   const [regiao, setRegiao] = useState<string>("");
   const [manualToken, setManualToken] = useState<string | null>(null);
 
-  // Busca produtos agrupados por região
-  const { regioes, products, loading, error } = useProductsPorRegiao();
+  // Busca regiões do endpoint correto (enum)
+  const { regioes, loading: regioesLoading, error: regioesError } = useRegioesFromSearchApi();
+
+  // Busca produtos agrupados
+  const { products, loading: productsLoading, error: productsError } = useProductsPorRegiao();
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -66,8 +67,8 @@ const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) =>
     mapRef.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/light-v11",
-      center: [-51.5, -29], // centro inicial: Serra Gaúcha
-      zoom: 5,
+      center: southAmericaCenter, // America do Sul
+      zoom: 3.5,
       attributionControl: false,
       projection: "globe",
       pitch: 45,
@@ -94,7 +95,7 @@ const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) =>
   // Atualiza pins e foca na região quando muda filtro
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !regioes.length) return;
+    if (!map || regioes.length === 0) return;
 
     // Remove markers antigos
     (map as any)._customMarkers = (map as any)._customMarkers || [];
@@ -103,9 +104,9 @@ const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) =>
 
     // Foco bounds/região
     if (regiao && mapBoundsPorRegiao[regiao]) {
-      map.fitBounds(mapBoundsPorRegiao[regiao], { padding: 50, duration: 1000 });
+      map.fitBounds(mapBoundsPorRegiao[regiao], { padding: 60, duration: 1000 });
     } else {
-      map.flyTo({ center: [-51.5, -29], zoom: 5, duration: 1000 });
+      map.fitBounds(southAmericaBounds, { padding: 60, duration: 1000 });
     }
 
     // Adiciona marcadores dos produtos (filtrados)
@@ -140,7 +141,7 @@ const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) =>
 
       (map as any)._customMarkers.push(marker);
     });
-  }, [regiao, products, regioes.length, onPinClick]);
+  }, [regiao, products, regioes]);
 
   return (
     <div className="w-full h-[74vh] relative flex flex-col justify-start items-center">
@@ -156,16 +157,16 @@ const RegiaoMap: React.FC<RegiaoMapProps> = ({ onPinClick, selectedProduct }) =>
           onChange={e => setRegiao(e.target.value)}
         >
           <option value="">Todas regiões</option>
-          {regioes.map((reg) => (
-            <option key={reg} value={reg}>{reg}</option>
+          {!regioesLoading && regioes.map((reg) => (
+            <option key={reg.value} value={reg.value}>{reg.label}</option>
           ))}
         </select>
       </div>
 
       {/* Mapa */}
       <div ref={mapContainer} className="relative rounded-lg shadow-lg w-[95vw] max-w-[812px] h-[73vh] z-10" />
-      {loading && <WineGlassLoading />}
-      {error && (
+      {(regioesLoading || productsLoading) && <WineGlassLoading />}
+      {(regioesError || productsError) && (
         <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-30">
           <span className="text-red-500 text-lg">Erro ao carregar mapa e produtos</span>
         </div>
