@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { Heart, ShoppingBag, Pause, Play, Share2 } from 'lucide-react';
 import MuxOrYoutubePlayer from './MuxOrYoutubePlayer';
+import { toast } from "@/hooks/use-toast";
 
 interface ProductShortCardProps {
   product: {
@@ -79,7 +81,10 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
     } else {
       try {
         await navigator.clipboard.writeText(url);
-        alert('Link copiado para a área de transferência!');
+        toast({
+          title: "Link copiado!",
+          description: "O link do passeio foi copiado para a área de transferência.",
+        });
       } catch {
         alert('Não foi possível copiar o link. Acesse: ' + url);
       }
@@ -180,3 +185,4 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
 };
 
 export default ProductShortCard;
+
