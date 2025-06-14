@@ -2,11 +2,13 @@
 import React, { useState, useRef } from 'react';
 import YouTubeShortsCard from './YouTubeShortsCard';
 import { useYouTubeShortsProducts } from '@/hooks/useYouTubeShortsProducts';
+import ProductDetailsModal from './ProductDetailsModal';
 
 const YouTubeShorts: React.FC = () => {
   const { products, loading } = useYouTubeShortsProducts();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<null | typeof products[0]>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-play do primeiro produto
@@ -33,9 +35,13 @@ const YouTubeShorts: React.FC = () => {
     }
   };
 
+  // Agora, ao clicar, abre o modal/details na própria aba
   const handleOpenProduct = (slug: string) => {
-    window.open(`https://www.wine-locals.com/passeios/${slug}`, '_blank');
+    const found = products.find(p => p.attributes.slug === slug);
+    if (found) setSelectedProduct(found);
   };
+
+  const handleCloseModal = () => setSelectedProduct(null);
 
   if (loading) {
     return (
@@ -52,25 +58,32 @@ const YouTubeShorts: React.FC = () => {
   }
 
   return (
-    <div 
-      ref={scrollContainerRef}
-      className="h-full overflow-y-scroll snap-y snap-mandatory bg-black"
-      onScroll={handleScroll}
-      style={{ scrollBehavior: 'smooth' }}
-    >
-      {products.map((prod, index) => (
-        <YouTubeShortsCard
-          key={prod.id}
-          prod={prod}
-          index={index}
-          playingIndex={playingIndex}
-          setPlayingIndex={setPlayingIndex}
-          handleOpenProduct={handleOpenProduct}
-          productsLen={products.length}
-          currentIndex={currentIndex}
-        />
-      ))}
-    </div>
+    <>
+      <div 
+        ref={scrollContainerRef}
+        className="h-full overflow-y-scroll snap-y snap-mandatory bg-black"
+        onScroll={handleScroll}
+        style={{ scrollBehavior: 'smooth' }}
+      >
+        {products.map((prod, index) => (
+          <YouTubeShortsCard
+            key={prod.id}
+            prod={prod}
+            index={index}
+            playingIndex={playingIndex}
+            setPlayingIndex={setPlayingIndex}
+            handleOpenProduct={handleOpenProduct}
+            productsLen={products.length}
+            currentIndex={currentIndex}
+          />
+        ))}
+      </div>
+      <ProductDetailsModal 
+        open={!!selectedProduct}
+        product={selectedProduct}
+        onClose={handleCloseModal}
+      />
+    </>
   );
 };
 
