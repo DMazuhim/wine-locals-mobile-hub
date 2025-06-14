@@ -15,22 +15,16 @@ export function useRegioesFromSearchApi() {
     setLoading(true);
     setError(null);
 
-    // Precisa mandar um body, mesmo que vazio, para Search API
-    fetch("https://search.guiawinelocals.com/indexes/location/search", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ facet: "region" })
-    })
+    fetch("https://api.guiawinelocals.com/api/locations?pagination[pageSize]=1000")
       .then(async (res) => {
-        if (!res.ok) throw new Error("Erro Search API");
+        if (!res.ok) throw new Error("Erro ao buscar regiões");
         const data = await res.json();
-        // Espera resultado em facets.region.buckets
-        const buckets: any[] = data?.facets?.region?.buckets || [];
-        const regioesEnum = buckets.map(b => ({
-          label: b.value,
-          value: b.value
+        // O endpoint retorna em data[]
+        const regioesApi = Array.isArray(data?.data) ? data.data : [];
+        // Supondo que cada item na resposta tenha o campo 'name' como o nome da região
+        const regioesEnum = regioesApi.map((item: any) => ({
+          label: item.name,
+          value: item.name
         }));
         setRegioes(regioesEnum);
       })
