@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ShoppingBag, Share, Play } from 'lucide-react';
 
@@ -47,10 +46,14 @@ const YouTubeShorts: React.FC = () => {
           'https://api.guiawinelocals.com/api/products?filters[videoGallery][title][$notNull]=true&pagination[pageSize]=1000'
         );
         const data: ApiResponse = await response.json();
-        // Filtra somente produtos com pelo menos 1 vídeo válido
+        console.log('API products result:', data);
+
+        // Novo filtro: pega produtos que possuem PELO MENOS 1 vídeo com playback_id válido, não só no primeiro vídeo
         const filtered = data.data.filter(
-          (p) => p.attributes?.videoGallery?.length && p.attributes.videoGallery[0].playback_id
-        );
+            (p) =>
+              p.attributes?.videoGallery?.some((video) => !!video.playback_id)
+          );
+        console.log('Produtos encontrados após filtro:', filtered);
         setProducts(filtered);
       } finally {
         setLoading(false);
@@ -118,7 +121,8 @@ const YouTubeShorts: React.FC = () => {
     >
       {products.map((prod, index) => {
         const attr = prod.attributes;
-        const video = attr.videoGallery?.[0];
+        // Pega O PRIMEIRO vídeo válido do array videoGallery, não importa o índice
+        const video = attr.videoGallery?.find(v => !!v.playback_id);
         const srcVideo = video ? `https://stream.mux.com/${video.playback_id}.m3u8?redundant_streams=true&CMCD=cid%3D%22${video.playback_id}%22%2Csid%3D%225755b03b-d195-4d6c-a635-362031967d86%22` : undefined;
         const showPlay = playingIndex !== index;
 
