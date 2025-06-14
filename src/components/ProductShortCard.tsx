@@ -35,19 +35,19 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({ product, onShopping
 
   return (
     <div
-      className="relative m-auto bg-white rounded-2xl shadow-lg flex flex-col justify-between max-w-[420px] min-h-[540px] w-[95vw] h-[540px] sm:h-[600px] overflow-hidden"
+      className="relative m-auto bg-white flex flex-col justify-between max-w-[420px] min-h-[540px] w-[95vw] h-[540px] sm:h-[600px] overflow-hidden"
       style={{
         boxSizing: 'border-box',
+        // Removido: borderRadius, boxShadow etc.
       }}
     >
       {/* Imagem Expandida */}
-      <div className="relative w-full h-[65%]">
+      <div className="relative w-full h-[70%]">
         <img
           src={thumb}
           alt={product.name}
           className="object-cover w-full h-full"
         />
-        {/* Botão compartilhar foi removido, substituído pelos dois pedidos */}
         <div className="absolute top-3 right-3 flex flex-col items-end gap-4 z-10">
           {/* Botão Curtir */}
           <button

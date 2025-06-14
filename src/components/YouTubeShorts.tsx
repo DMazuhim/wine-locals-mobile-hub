@@ -76,14 +76,15 @@ const YouTubeShorts: React.FC = () => {
   useEffect(() => {
     // Scroll para o card atual quando currentIndex muda
     if (containerRef.current) {
-      const node = containerRef.current.children[currentIndex] as HTMLElement;
+      const node = containerRefRef.current?.children[currentIndex] as HTMLElement;
       if (node) {
-        node.scrollIntoView({ behavior: 'smooth' });
+        node.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
   }, [currentIndex]);
 
-  // Garantir que área visível não fica sob menu fixo (80px)
+  // Altura visível: ocupar tudo MENOS o menu fixo de 80px
+  // O card já está limitado para caber nessa área; vamos garantir padding bottom extra na lista para que o card nunca fique sob o menu.
   const VISIBLE_HEIGHT = 'calc(100vh - 80px)';
 
   if (loading) {
@@ -111,6 +112,7 @@ const YouTubeShorts: React.FC = () => {
       style={{
         scrollBehavior: 'smooth',
         height: VISIBLE_HEIGHT,
+        paddingBottom: '80px', // Espaço extra para o menu sempre ficar fora do card
       }}
     >
       {products.map((product, idx) => (
