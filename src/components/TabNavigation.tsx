@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Wine, TrendingUp, User } from 'lucide-react';
+import { Wine, TrendingUp } from 'lucide-react';
 
 interface TabNavigationProps {
   activeTab: string;
@@ -10,8 +10,8 @@ interface TabNavigationProps {
 const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
     { id: 'webview', icon: Wine, label: 'Wine Locals' },
-    { id: 'youtube', icon: TrendingUp, label: 'Trends' },
-    { id: 'profile', icon: User, label: 'Perfil' }
+    { id: 'youtube', icon: TrendingUp, label: 'Trends' }
+    // Removido a aba de perfil
   ];
 
   return (
@@ -43,3 +43,4 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange })
 };
 
 export default TabNavigation;
+
