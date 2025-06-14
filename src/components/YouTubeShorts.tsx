@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import ProductShortCard from './ProductShortCard';
 import PasseioWebViewModal from './PasseioWebViewModal';
@@ -41,6 +40,10 @@ const YouTubeShorts: React.FC = () => {
   // Direção do último scroll (1=baixo, -1=cima)
   const directionRef = useRef<number>(1);
 
+  // For touch/swipe navigation
+  const touchStartY = useRef<number | null>(null);
+  const touchEndY = useRef<number | null>(null);
+
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -65,22 +68,57 @@ const YouTubeShorts: React.FC = () => {
   // Snap scroll vertical
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    if (isScrolling.current) return;
-    if (e.deltaY > 30 && currentIndex < products.length - 1) {
+  // Scroll-to-next/prev helpers
+  const goToNext = () => {
+    if (currentIndex < products.length - 1) {
       directionRef.current = 1;
       setAnimationClass("animate-slide-in-right");
-      setCurrentIndex((idx) => idx + 1);
+      setCurrentIndex(idx => idx + 1);
       isScrolling.current = true;
       setTimeout(() => { isScrolling.current = false; }, 400);
     }
-    if (e.deltaY < -30 && currentIndex > 0) {
+  };
+  const goToPrev = () => {
+    if (currentIndex > 0) {
       directionRef.current = -1;
       setAnimationClass("animate-slide-in-left");
-      setCurrentIndex((idx) => idx - 1);
+      setCurrentIndex(idx => idx - 1);
       isScrolling.current = true;
       setTimeout(() => { isScrolling.current = false; }, 400);
     }
+  };
+
+  // Wheel navigation (desktop/laptop)
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (isScrolling.current) return;
+    if (e.deltaY > 30) goToNext();
+    if (e.deltaY < -30) goToPrev();
+  };
+
+  // Touch/swipe navigation (mobile)
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length !== 1) return;
+    touchStartY.current = e.touches[0].clientY;
+    touchEndY.current = null;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!touchStartY.current) return;
+    touchEndY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartY.current || !touchEndY.current) return;
+    const deltaY = touchStartY.current - touchEndY.current;
+    if (Math.abs(deltaY) > 45) { // Swipe threshold
+      if (deltaY > 0) {
+        goToNext();
+      } else {
+        goToPrev();
+      }
+    }
+    touchStartY.current = null;
+    touchEndY.current = null;
   };
 
   useEffect(() => {
@@ -123,15 +161,19 @@ const YouTubeShorts: React.FC = () => {
 
   return (
     <div
-      className="h-full overflow-y-scroll snap-y snap-mandatory bg-neutral-950 youtube-container"
+      className="h-full overflow-y-hidden snap-y snap-mandatory bg-neutral-950 youtube-container"
       ref={containerRef}
       tabIndex={0}
       onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       style={{
         scrollBehavior: 'smooth',
         height: VISIBLE_HEIGHT,
         width: VISIBLE_WIDTH,
         paddingBottom: '0px', // Não precisamos de espaço extra se o card encaixar
+        touchAction: 'pan-y'
       }}
     >
       {products.map((product, idx) => (
