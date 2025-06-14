@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import ProductShortCard from './ProductShortCard';
 import PasseioWebViewModal from './PasseioWebViewModal';
+import WineGlassLoading from "./WineGlassLoading";
 
 // Tipos
 type Product = {
@@ -167,11 +167,7 @@ const YouTubeShorts: React.FC = () => {
   const VISIBLE_WIDTH = '100vw';
 
   if (loading) {
-    return (
-      <div className="h-full flex items-center justify-center bg-black">
-        <span className="text-white text-lg">Carregando experiências...</span>
-      </div>
-    );
+    return <WineGlassLoading />;
   }
 
   if (!products.length) {
@@ -229,4 +225,3 @@ const YouTubeShorts: React.FC = () => {
 };
 
 export default YouTubeShorts;
-
