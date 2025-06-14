@@ -30,6 +30,9 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
 }) => {
   const [liked, setLiked] = useState(false);
   const [paused, setPaused] = useState(false);
+  // Novo estado: controla se os controles devem aparecer
+  const [showControls, setShowControls] = useState<boolean>(false);
+
   // Seleciona primeiro item do videoGallery
   const videoItem = product.videoGallery?.[0];
 
@@ -54,7 +57,7 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!product.slug) return;
-    const url = `https://wine-locals.com/p/${product.slug}`;
+    const url = `https://wine-locals.com/passeios/${product.slug}`;
     const shareData = {
       title: product.name,
       text: `${product.name} em ${product.location} por R$ ${Number(product.price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
@@ -76,6 +79,13 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
     }
   };
 
+  // Evento que exibe botões de controle ao clicar no vídeo
+  const handlePlayerClick = (e: React.MouseEvent) => {
+    if (!isActive) return;
+    setShowControls(true);
+    // Propaga clique para pausar/play se clicar diretamente no botão
+  };
+
   return (
     <div
       className={`relative bg-black w-full h-full min-h-0 min-w-0 overflow-hidden flex flex-col justify-end ${animationClass}`}
@@ -85,16 +95,18 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
       }}
     >
       {/* Vídeo em destaque */}
-      <MuxOrYoutubePlayer
-        item={videoItem}
-        autoPlay={isActive}
-        muted={!isActive}
-        play={isActive && !paused}
-        paused={paused}
-        height="100%"
-        width="100%"
-        className="absolute inset-0 z-0"
-      />
+      <div className="absolute inset-0 z-0" onClick={handlePlayerClick}>
+        <MuxOrYoutubePlayer
+          item={videoItem}
+          autoPlay={isActive}
+          muted={!isActive}
+          play={isActive && !paused}
+          paused={paused}
+          height="100%"
+          width="100%"
+          className=""
+        />
+      </div>
 
       {/* Overlay de gradiente na parte inferior */}
       <div className="absolute inset-x-0 bottom-0 h-2/5 pointer-events-none z-10" style={{
@@ -126,8 +138,9 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
         </button>
       </div>
 
-      {/* Botão Play/Pause central, só no card ativo e sobre o vídeo */}
-      {isActive && (
+      {/* Botão Play/Pause central, só no card ativo e sobre o vídeo.
+          Só aparece se showControls for true */}
+      {isActive && showControls && (
         <button
           onClick={handlePauseToggle}
           aria-label={paused ? "Tocar vídeo" : "Pausar vídeo"}
@@ -160,3 +173,4 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
 };
 
 export default ProductShortCard;
+
