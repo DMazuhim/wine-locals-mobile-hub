@@ -1,46 +1,42 @@
 import React from 'react';
-import { Home, Video, Map } from 'lucide-react';
+import { Wine, TrendingUp } from 'lucide-react';
 
-// Defina estilos para os botões da tab navigation aqui
-const tabButtonStyles = {
-  base: "flex-1 p-3 flex flex-col items-center justify-center focus:outline-none",
-  active: "text-primary font-bold",
-  inactive: "text-neutral-500",
-};
+interface TabNavigationProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
 
-// Adicione o novo tab para Ver por região
-const tabs = [
-  {
-    key: "webview",
-    label: "Home",
-    icon: Home,
-  },
-  {
-    key: "youtube",
-    label: "Trends",
-    icon: Video,
-  },
-  {
-    key: "regiao-map",
-    label: "Ver por região",
-    icon: Map,
-  }
-];
+const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange }) => {
+  const tabs = [
+    { id: 'webview', icon: Wine, label: 'Loja' },
+    { id: 'youtube', icon: TrendingUp, label: 'Trends' }
+  ];
 
-const TabNavigation = ({ activeTab, onTabChange }: { activeTab: string, onTabChange: (t: string) => void }) => {
   return (
-    <nav className="tab-navigation flex justify-around items-center">
-      {tabs.map(tab => (
-        <button
-          key={tab.key}
-          onClick={() => onTabChange(tab.key)}
-          className={`tab-button ${tabButtonStyles.base} ${activeTab === tab.key ? tabButtonStyles.active : tabButtonStyles.inactive} `}
-        >
-          <tab.icon size={24} />
-          <span className="text-xs mt-1">{tab.label}</span>
-        </button>
-      ))}
-    </nav>
+    <div className="tab-navigation bg-white">
+      <div className="flex h-full">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`tab-button flex-1 flex flex-col items-center justify-center space-y-1 transition-all duration-300 ${
+                isActive ? 'text-black' : 'text-gray-500 hover:text-black'
+              }`}
+            >
+              <Icon className="w-6 h-6" />
+              <span className="text-xs font-medium">{tab.label}</span>
+              {isActive && (
+                <div className="w-8 h-0.5 bg-black rounded-full"></div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 

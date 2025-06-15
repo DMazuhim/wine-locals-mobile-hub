@@ -1,8 +1,8 @@
+
 import React, { useState } from 'react';
 import WebView from '@/components/WebView';
 import YouTubeShorts from '@/components/YouTubeShorts';
 import TabNavigation from '@/components/TabNavigation';
-import RegiaoMapPage from "./RegiaoMapPage";
 
 // Não precisamos mais do Login nem persistência de sessão
 
@@ -23,8 +23,6 @@ const Index = () => {
         );
       case 'youtube':
         return <YouTubeShorts />;
-      case 'regiao-map':
-        return <RegiaoMapPage />;
       default:
         return (
           <WebView 
