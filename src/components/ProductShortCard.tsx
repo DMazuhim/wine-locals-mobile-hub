@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Heart, ShoppingBag, Pause, Play, Share2 } from 'lucide-react';
 import MuxOrYoutubePlayer from './MuxOrYoutubePlayer';
 import { toast } from "@/hooks/use-toast";
@@ -33,11 +33,15 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
   const [paused, setPaused] = useState(false);
   const [showControls, setShowControls] = useState<boolean>(false);
 
+  // Referências para long press
+  const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
+  const longPressTriggered = useRef(false);
+
   // Seleciona primeiro item do videoGallery
   const videoItem = product.videoGallery?.[0];
 
-  const handleLikeToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleLikeToggle = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) e.stopPropagation();
     setLiked((x) => !x);
   };
 
@@ -63,6 +67,21 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
     });
   };
 
+  // Função de copiar link (reutilizada)
+  const handleCopyLink = async () => {
+    if (!product.slug) return;
+    const url = `https://wine-locals.com/passeios/${product.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copiado!",
+        description: "O link do passeio foi copiado para a área de transferência.",
+      });
+    } catch {
+      alert('Não foi possível copiar o link. Acesse: ' + url);
+    }
+  };
+
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!product.slug) return;
@@ -79,15 +98,7 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
         // Ignora se o usuário cancelar
       }
     } else {
-      try {
-        await navigator.clipboard.writeText(url);
-        toast({
-          title: "Link copiado!",
-          description: "O link do passeio foi copiado para a área de transferência.",
-        });
-      } catch {
-        alert('Não foi possível copiar o link. Acesse: ' + url);
-      }
+      await handleCopyLink();
     }
   };
 
@@ -96,6 +107,54 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
     if (!isActive) return;
     setShowControls(true);
     // Propaga clique para pausar/play se clicar diretamente no botão
+  };
+
+  // NOVO: handler de double click (curtir/descurtir)
+  const handleVideoDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isActive) return;
+    handleLikeToggle(e);
+    // breve feedback visual de curtir (pode-se melhorar depois)
+  };
+
+  // NOVO: handlers de long press (copiar link pra compartilhar)
+  const handleVideoMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isActive) return;
+    longPressTriggered.current = false;
+    longPressTimeout.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      handleCopyLink();
+    }, 600); // 600ms para long press
+  };
+
+  const handleVideoMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (longPressTimeout.current) {
+      clearTimeout(longPressTimeout.current);
+      longPressTimeout.current = null;
+    }
+  };
+
+  const handleVideoMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (longPressTimeout.current) {
+      clearTimeout(longPressTimeout.current);
+      longPressTimeout.current = null;
+    }
+  };
+
+  // Mobile/touch equivalents
+  const handleVideoTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isActive) return;
+    longPressTriggered.current = false;
+    longPressTimeout.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      handleCopyLink();
+    }, 600);
+  };
+
+  const handleVideoTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (longPressTimeout.current) {
+      clearTimeout(longPressTimeout.current);
+      longPressTimeout.current = null;
+    }
   };
 
   return (
@@ -107,7 +166,16 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
       }}
     >
       {/* Vídeo em destaque */}
-      <div className="absolute inset-0 z-0" onClick={handlePlayerClick}>
+      <div
+        className="absolute inset-0 z-0"
+        onClick={handlePlayerClick}
+        onDoubleClick={handleVideoDoubleClick}
+        onMouseDown={handleVideoMouseDown}
+        onMouseUp={handleVideoMouseUp}
+        onMouseLeave={handleVideoMouseLeave}
+        onTouchStart={handleVideoTouchStart}
+        onTouchEnd={handleVideoTouchEnd}
+      >
         <MuxOrYoutubePlayer
           item={videoItem}
           autoPlay={isActive}
@@ -185,4 +253,3 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
 };
 
 export default ProductShortCard;
-
