@@ -31,11 +31,9 @@ export default defineConfig(({ mode }) => ({
         manualChunks: undefined,
       },
     },
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: mode === 'production',
-      },
-    },
+    minify: mode === 'production',
+  },
+  esbuild: {
+    drop: mode === 'production' ? ['console', 'debugger'] : [],
   },
 }));
