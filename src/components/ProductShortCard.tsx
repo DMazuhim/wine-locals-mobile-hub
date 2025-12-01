@@ -1,10 +1,8 @@
 
 import React, { useState, useRef } from 'react';
-import { ShoppingBag, Pause, Play, Share2 } from 'lucide-react';
+import { Heart, ShoppingBag, Pause, Play, Share2 } from 'lucide-react';
 import MuxOrYoutubePlayer from './MuxOrYoutubePlayer';
 import { toast } from "@/hooks/use-toast";
-
-const BASE_URL = import.meta.env.VITE_APP_BASE_URL || 'https://wine-locals.com';
 
 interface ProductShortCardProps {
   product: {
@@ -31,14 +29,21 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
   width = "100vw",
   isActive = false,
 }) => {
+  const [liked, setLiked] = useState(false);
   const [paused, setPaused] = useState(false);
   const [showControls, setShowControls] = useState<boolean>(false);
 
   // Referências para long press
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
+  const longPressTriggered = useRef(false);
 
   // Seleciona primeiro item do videoGallery
   const videoItem = product.videoGallery?.[0];
+
+  const handleLikeToggle = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) e.stopPropagation();
+    setLiked((x) => !x);
+  };
 
   const handleShoppingBagClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -65,7 +70,7 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
   // Função de copiar link (reutilizada)
   const handleCopyLink = async () => {
     if (!product.slug) return;
-    const url = `${BASE_URL}/passeios/${product.slug}`;
+    const url = `https://wine-locals.com/passeios/${product.slug}`;
     try {
       await navigator.clipboard.writeText(url);
       toast({
@@ -80,22 +85,43 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!product.slug) return;
-    const url = `${BASE_URL}/passeios/${product.slug}`;
-    
-    // Sempre tenta abrir o link diretamente
-    window.open(url, '_blank');
+    const url = `https://wine-locals.com/passeios/${product.slug}`;
+    const shareData = {
+      title: product.name,
+      text: `${product.name} em ${product.location} por R$ ${Number(product.price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
+      url,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // Ignora se o usuário cancelar
+      }
+    } else {
+      await handleCopyLink();
+    }
   };
 
   // Evento que exibe botões de controle ao clicar no vídeo
   const handlePlayerClick = (e: React.MouseEvent) => {
     if (!isActive) return;
     setShowControls(true);
+    // Propaga clique para pausar/play se clicar diretamente no botão
+  };
+
+  // NOVO: handler de double click (curtir/descurtir)
+  const handleVideoDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isActive) return;
+    handleLikeToggle(e);
+    // breve feedback visual de curtir (pode-se melhorar depois)
   };
 
   // NOVO: handlers de long press (copiar link pra compartilhar)
   const handleVideoMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isActive) return;
+    longPressTriggered.current = false;
     longPressTimeout.current = setTimeout(() => {
+      longPressTriggered.current = true;
       handleCopyLink();
     }, 600); // 600ms para long press
   };
@@ -117,7 +143,9 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
   // Mobile/touch equivalents
   const handleVideoTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (!isActive) return;
+    longPressTriggered.current = false;
     longPressTimeout.current = setTimeout(() => {
+      longPressTriggered.current = true;
       handleCopyLink();
     }, 600);
   };
@@ -141,6 +169,7 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
       <div
         className="absolute inset-0 z-0"
         onClick={handlePlayerClick}
+        onDoubleClick={handleVideoDoubleClick}
         onMouseDown={handleVideoMouseDown}
         onMouseUp={handleVideoMouseUp}
         onMouseLeave={handleVideoMouseLeave}
@@ -166,6 +195,13 @@ const ProductShortCard: React.FC<ProductShortCardProps> = ({
 
       {/* Botões no topo */}
       <div className="absolute top-4 right-4 flex flex-col items-end gap-3 z-20">
+        <button
+          aria-label={liked ? "Descurtir" : "Curtir"}
+          onClick={handleLikeToggle}
+          className="rounded-full p-2 bg-white/80 hover:bg-white transition"
+        >
+          <Heart size={24} className={liked ? 'text-red-500 fill-red-500' : 'text-neutral-700'} />
+        </button>
         <button
           aria-label="Ver passeio"
           onClick={handleShoppingBagClick}
