@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     headers: {
       'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'SAMEORIGIN',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
     },
@@ -30,9 +31,11 @@ export default defineConfig(({ mode }) => ({
         manualChunks: undefined,
       },
     },
-    minify: mode === 'production',
-  },
-  esbuild: {
-    drop: mode === 'production' ? ['console', 'debugger'] : [],
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: mode === 'production',
+      },
+    },
   },
 }));
